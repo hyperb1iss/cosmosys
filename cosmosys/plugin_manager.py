@@ -1,30 +1,55 @@
+"""Plugin management system for Cosmosys."""
+
 import importlib
 import os
-from typing import Dict, Type
+from typing import Dict, Optional, Type
 
 from cosmosys.config import CosmosysConfig
 from cosmosys.steps.base import Step, StepFactory
 
 
 class PluginManager:
+    """Manages the loading and retrieval of plugins for Cosmosys."""
+
     def __init__(self, config: CosmosysConfig):
+        """
+        Initialize a PluginManager instance.
+
+        Args:
+            config (CosmosysConfig): The configuration object for Cosmosys.
+        """
         self.config = config
         self.plugins: Dict[str, Type[Step]] = {}
 
-    def load_plugins(self):
-        plugin_dir = self.config.get('plugins.directory', 'plugins')
+    def load_plugins(self) -> None:
+        """
+        Load plugins from the specified plugin directory.
+
+        This method searches for Python files in the plugin directory,
+        imports them, and registers any Step subclasses as plugins.
+        """
+        plugin_dir = self.config.get("plugins.directory", "plugins")
         if not os.path.exists(plugin_dir):
             return
 
         for filename in os.listdir(plugin_dir):
-            if filename.endswith('.py') and not filename.startswith('__'):
+            if filename.endswith(".py") and not filename.startswith("__"):
                 plugin_name = filename[:-3]
-                module = importlib.import_module(f'{plugin_dir}.{plugin_name}')
+                module = importlib.import_module(f"{plugin_dir}.{plugin_name}")
                 for attr_name in dir(module):
                     attr = getattr(module, attr_name)
                     if isinstance(attr, type) and issubclass(attr, Step) and attr != Step:
                         self.plugins[plugin_name] = attr
                         StepFactory.register(plugin_name)(attr)
 
-    def get_plugin(self, name: str) -> Type[Step]:
+    def get_plugin(self, name: str) -> Optional[Type[Step]]:
+        """
+        Retrieve a plugin by name.
+
+        Args:
+            name (str): The name of the plugin to retrieve.
+
+        Returns:
+            Optional[Type[Step]]: The plugin class if found, None otherwise.
+        """
         return self.plugins.get(name)

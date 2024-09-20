@@ -1,6 +1,7 @@
-from typing import List, Optional
+"""Command-line interface for Cosmosys."""
 
 import typer
+from typer import Context, Option
 
 from cosmosys.ascii_art import ASCIIArtManager
 from cosmosys.color_schemes import ColorManager
@@ -10,29 +11,41 @@ from cosmosys.steps.base import StepFactory
 
 app = typer.Typer()
 
+
 class CosmosysContext:
+    """Context object for Cosmosys CLI commands."""
+
     def __init__(self, config_file: str, color_scheme: str):
+        """
+        Initialize the Cosmosys context.
+
+        Args:
+            config_file (str): Path to the configuration file.
+            color_scheme (str): Name of the color scheme to use.
+        """
         self.config: CosmosysConfig = load_config(config_file)
         self.color_manager: ColorManager = ColorManager(self.config)
         self.ascii_art_manager: ASCIIArtManager = ASCIIArtManager(self.color_manager)
         self.plugin_manager: PluginManager = PluginManager(self.config)
         self.plugin_manager.load_plugins()
 
+
 @app.callback()
 def callback(
-    ctx: typer.Context,
-    config: str = typer.Option("cosmosys.toml", help="Path to the configuration file"),
-    color_scheme: str = typer.Option("default", help="Color scheme to use"),
-):
+    ctx: Context,
+    config: str = Option("cosmosys.toml", help="Path to the configuration file"),
+    color_scheme: str = Option("default", help="Color scheme to use"),
+) -> None:
     """Cosmosys: A flexible and customizable release management tool."""
-    if not isinstance(ctx.obj, CosmosysConfig):
+    if not isinstance(ctx.obj, CosmosysContext):
         ctx.obj = CosmosysContext(config, color_scheme)
+
 
 @app.command()
 def release(
-    ctx: typer.Context,
-    dry_run: bool = typer.Option(False, help="Perform a dry run without making any changes"),
-):
+    ctx: Context,
+    dry_run: bool = Option(False, help="Perform a dry run without making any changes"),
+) -> None:
     """Run the release process."""
     if isinstance(ctx.obj, CosmosysContext):
         sf_ctx = ctx.obj
@@ -71,13 +84,18 @@ def release(
     typer.echo(ascii_art_manager.render_starfield(color="secondary"))
     typer.echo(color_manager.primary("Release process completed"))
 
-@app.command()
-def version():
-    """Display the current version."""
-    typer.echo("Cosmosys v0.1.0")  # TODO: Implement dynamic version retrieval
 
-def main():
+@app.command()
+def version() -> None:
+    """Display the current version of Cosmosys."""
+    # TODO: Implement dynamic version retrieval
+    typer.echo("Cosmosys v0.1.0")
+
+
+def main() -> None:
+    """Entry point for the Cosmosys CLI."""
     app()
+
 
 if __name__ == "__main__":
     main()

@@ -1,10 +1,14 @@
+"""Unit tests for the Cosmosys configuration module."""
+
+from pathlib import Path
 import pytest
 from mashumaro.exceptions import InvalidFieldValue
 
 from cosmosys.config import CosmosysConfig, ProjectConfig, ReleaseConfig, load_config
 
 
-def test_valid_config():
+def test_valid_config() -> None:
+    """Test creating a valid configuration."""
     config_data = {
         "project": {
             "name": "TestProject",
@@ -21,7 +25,8 @@ def test_valid_config():
     assert config.is_feature_enabled("changelog")
 
 
-def test_invalid_config():
+def test_invalid_config() -> None:
+    """Test handling of an invalid configuration."""
     invalid_config = {
         "project": {
             "name": "TestProject",
@@ -31,10 +36,13 @@ def test_invalid_config():
     }
     with pytest.raises(InvalidFieldValue) as excinfo:
         CosmosysConfig.from_dict(invalid_config)
-    assert "Field \"project\" of type ProjectConfig in CosmosysConfig has invalid value" in str(excinfo.value)
+    assert 'Field "project" of type ProjectConfig in CosmosysConfig has invalid value' in str(
+        excinfo.value
+    )
 
 
-def test_custom_color_scheme():
+def test_custom_color_scheme() -> None:
+    """Test configuration with a custom color scheme."""
     config_data = {
         "project": {
             "name": "TestProject",
@@ -58,7 +66,8 @@ def test_custom_color_scheme():
     assert config.custom_color_schemes["custom"].primary == "blue"
 
 
-def test_load_config(tmp_path):
+def test_load_config(tmp_path: Path) -> None:
+    """Test loading configuration from a file."""
     config_file = tmp_path / "test_config.toml"
     config_content = """
     [project]
@@ -82,7 +91,8 @@ def test_load_config(tmp_path):
     assert config.is_feature_enabled("changelog")
 
 
-def test_save_config(tmp_path):
+def test_save_config(tmp_path: Path) -> None:
+    """Test saving configuration to a file."""
     config_file = tmp_path / "test_config.toml"
     config = CosmosysConfig(
         project=ProjectConfig(name="TestProject", repo_name="test/repo", version="1.0.0"),
