@@ -1,56 +1,62 @@
-from typing import Dict, NamedTuple
+from dataclasses import dataclass, field
+from typing import ClassVar, Dict
 
-from colorama import Back, Fore, Style
+from colorama import Fore, Style
+from mashumaro import DataClassDictMixin
 
-
-class ColorScheme(NamedTuple):
-    primary: str
-    secondary: str
-    success: str
-    error: str
-    warning: str
-    info: str
+from starforge.config import ColorScheme, StarForgeConfig
 
 
-DEFAULT_SCHEME = ColorScheme(
-    primary=Fore.CYAN,
-    secondary=Fore.MAGENTA,
-    success=Fore.GREEN,
-    error=Fore.RED,
-    warning=Fore.YELLOW,
-    info=Fore.BLUE,
-)
+@dataclass
+class ColorManager(DataClassDictMixin):
+    config: StarForgeConfig
+    current_scheme: ColorScheme = field(init=False)
+    COLOR_SCHEMES: Dict[str, ColorScheme] = field(init=False)
 
-COLOR_SCHEMES: Dict[str, ColorScheme] = {
-    "default": DEFAULT_SCHEME,
-    "monochrome": ColorScheme(
-        primary=Fore.WHITE,
-        secondary=Fore.LIGHTBLACK_EX,
-        success=Fore.WHITE,
-        error=Fore.WHITE,
-        warning=Fore.WHITE,
-        info=Fore.WHITE,
-    ),
-    "neon": ColorScheme(
+    DEFAULT_SCHEME: ClassVar[ColorScheme] = ColorScheme(
         primary=Fore.CYAN,
         secondary=Fore.MAGENTA,
         success=Fore.GREEN,
         error=Fore.RED,
         warning=Fore.YELLOW,
         info=Fore.BLUE,
-    ),
-}
+    )
 
+    @classmethod
+    def get_default_schemes(cls) -> Dict[str, ColorScheme]:
+        return {
+            "default": cls.DEFAULT_SCHEME,
+            "monochrome": ColorScheme(
+                primary=Fore.WHITE,
+                secondary=Fore.LIGHTBLACK_EX,
+                success=Fore.WHITE,
+                error=Fore.WHITE,
+                warning=Fore.WHITE,
+                info=Fore.WHITE,
+            ),
+            "neon": ColorScheme(
+                primary=Fore.CYAN,
+                secondary=Fore.MAGENTA,
+                success=Fore.GREEN,
+                error=Fore.RED,
+                warning=Fore.YELLOW,
+                info=Fore.BLUE,
+            ),
+        }
 
-class ColorManager:
-    def __init__(self, scheme_name: str = "default"):
-        self.set_scheme(scheme_name)
+    def __post_init__(self):
+        self.COLOR_SCHEMES = self.get_default_schemes()
+        self.COLOR_SCHEMES.update(self.config.custom_color_schemes)
+        self.current_scheme = self.get_scheme(self.config.color_scheme)
+
+    def get_scheme(self, scheme_name: str) -> ColorScheme:
+        return self.COLOR_SCHEMES.get(scheme_name, self.DEFAULT_SCHEME)
 
     def set_scheme(self, scheme_name: str):
-        self.scheme = COLOR_SCHEMES.get(scheme_name, DEFAULT_SCHEME)
+        self.current_scheme = self.get_scheme(scheme_name)
 
     def colorize(self, text: str, color: str) -> str:
-        return f"{getattr(self.scheme, color)}{text}{Style.RESET_ALL}"
+        return f"{getattr(self.current_scheme, color)}{text}{Style.RESET_ALL}"
 
     def primary(self, text: str) -> str:
         return self.colorize(text, "primary")
