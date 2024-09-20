@@ -1,0 +1,53 @@
+[tool.poetry]
+name = "starforge"
+version = "0.1.0"
+description = "A flexible and customizable release management tool"
+authors = ["Stefanie Jane <stef@hyperbliss.tech>"]
+license = "Apache-2.0"
+readme = "README.md"
+homepage = "https://github.com/hyperb1iss/starforge"
+repository = "https://github.com/hyperb1iss/starforge"
+keywords = ["release", "management", "deployment", "versioning"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+typer = {extras = ["all"], version = "0.12.5"}
+colorama = "^0.4.6"
+toml = "^0.10.2"
+gitpython = "^3.1.43"
+semver = "^3.0.0"
+pyyaml = "^6.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^8.3.3"
+black = "^24.8.0"
+isort = "^5.12.0"
+mypy = "^1.2.0"
+pylint = "^3.3.0"
+
+[tool.poetry.scripts]
+starforge = "starforge.cli:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+select = ["E", "F", "I", "N", "W", "B", "C", "D"]
+ignore = ["D100", "D104", "D107"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+ignore_missing_imports = true
+strict = true
+
+[tool.pylint.messages_control]
+disable = "C0330, C0326"
+
+[tool.pylint.format]
+max-line-length = "100"
