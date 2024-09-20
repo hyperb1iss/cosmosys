@@ -1,13 +1,13 @@
 import pytest
 from colorama import Fore, Style
 
-from starforge.color_schemes import ColorManager
-from starforge.config import ColorScheme, ProjectConfig, StarForgeConfig
+from cosmosys.color_schemes import ColorManager
+from cosmosys.config import ColorScheme, CosmosysConfig, ProjectConfig
 
 
 @pytest.fixture
 def default_config():
-    return StarForgeConfig(
+    return CosmosysConfig(
         project=ProjectConfig(name="TestProject", repo_name="test/repo", version="1.0.0"),
         color_scheme="default",
     )
@@ -15,7 +15,7 @@ def default_config():
 
 @pytest.fixture
 def custom_config():
-    return StarForgeConfig(
+    return CosmosysConfig(
         project=ProjectConfig(name="TestProject", repo_name="test/repo", version="1.0.0"),
         color_scheme="custom",
         custom_color_schemes={

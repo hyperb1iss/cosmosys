@@ -1,17 +1,17 @@
 [tool.poetry]
-name = "starforge"
+name = "cosmosys"
 version = "0.1.0"
 description = "A flexible and customizable release management tool"
 authors = ["Stefanie Jane <stef@hyperbliss.tech>"]
 license = "Apache-2.0"
 readme = "README.md"
-homepage = "https://github.com/hyperb1iss/starforge"
-repository = "https://github.com/hyperb1iss/starforge"
+homepage = "https://github.com/hyperb1iss/cosmosys"
+repository = "https://github.com/hyperb1iss/cosmosys"
 keywords = ["release", "management", "deployment", "versioning"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-typer = {extras = ["all"], version = "0.12.5"}
+typer = { extras = ["all"], version = "0.12.5" }
 colorama = "^0.4.6"
 toml = "^0.10.2"
 gitpython = "^3.1.43"
@@ -27,7 +27,7 @@ mypy = "^1.2.0"
 pylint = "^3.3.0"
 
 [tool.poetry.scripts]
-starforge = "starforge.cli:main"
+cosmosys = "cosmosys.cli:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -52,3 +52,4 @@ disable = "C0330, C0326"
 
 [tool.pylint.format]
 max-line-length = "100"
+

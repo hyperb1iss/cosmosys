@@ -4,12 +4,12 @@ from typing import ClassVar, Dict
 from colorama import Fore, Style
 from mashumaro import DataClassDictMixin
 
-from starforge.config import ColorScheme, StarForgeConfig
+from cosmosys.config import ColorScheme, CosmosysConfig
 
 
 @dataclass
 class ColorManager(DataClassDictMixin):
-    config: StarForgeConfig
+    config: CosmosysConfig
     current_scheme: ColorScheme = field(init=False)
     COLOR_SCHEMES: Dict[str, ColorScheme] = field(init=False)
 

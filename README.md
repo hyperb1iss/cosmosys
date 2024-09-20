@@ -1,10 +1,10 @@
-# StarForge: Cosmic Release Management 🌠
+# Cosmosys: Cosmic Release Management 🌠
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Poetry](https://img.shields.io/badge/dependency%20management-poetry-blue)](https://python-poetry.org/)
 
-StarForge is a flexible and customizable release management tool that brings the cosmic power of the stars to your software deployment process. 🚀
+Cosmosys is a flexible and customizable release management tool that brings the cosmic power of the stars to your software deployment process. 🚀
 
 ## ✨ Features
 
@@ -25,37 +25,37 @@ StarForge is a flexible and customizable release management tool that brings the
 
 ## 🛠️ Installation
 
-StarForge can be easily installed using pip:
+Cosmosys can be easily installed using pip:
 
 ```bash
-pip install starforge
+pip install cosmosys
 ```
 
 Or, if you prefer to use Poetry:
 
 ```bash
-poetry add starforge
+poetry add cosmosys
 ```
 
 ## 🚀 Quick Start
 
-1. Initialize a new StarForge configuration:
+1. Initialize a new Cosmosys configuration:
 
 ```bash
-starforge init
+cosmosys init
 ```
 
-2. Customize your `starforge.toml` configuration file.
+2. Customize your `cosmosys.toml` configuration file.
 
 3. Run the release process:
 
 ```bash
-starforge release
+cosmosys release
 ```
 
 ## 🌌 Configuration
 
-StarForge uses TOML for configuration. Here's a sample `starforge.toml`:
+Cosmosys uses TOML for configuration. Here's a sample `cosmosys.toml`:
 
 ```toml
 [project]
@@ -74,7 +74,7 @@ main_branch = "main"
 
 ## 🎨 Color Schemes
 
-StarForge comes with several predefined color schemes:
+Cosmosys comes with several predefined color schemes:
 
 - `default`: A balanced, easy-on-the-eyes scheme
 - `neon`: Bright and vibrant for those who like to live dangerously
@@ -84,15 +84,15 @@ You can also define your own color schemes in the configuration file!
 
 ## 🛰️ Contributing
 
-We welcome contributions to StarForge! Please check out our [Contributing Guide](CONTRIBUTING.md) for more information on how to get started.
+We welcome contributions to Cosmosys! Please check out our [Contributing Guide](CONTRIBUTING.md) for more information on how to get started.
 
 ## 📜 License
 
-StarForge is released under the Apache License 2.0. See the [LICENSE](LICENSE) file for more details.
+Cosmosys is released under the Apache License 2.0. See the [LICENSE](LICENSE) file for more details.
 
 ## 🌠 Acknowledgements
 
-StarForge was inspired by the vastness of the cosmos and the desire to make software releases as smooth as the motion of celestial bodies. We thank all the stars in the open-source community for their guidance and inspiration.
+Cosmosys was inspired by the vastness of the cosmos and the desire to make software releases as smooth as the motion of celestial bodies. We thank all the stars in the open-source community for their guidance and inspiration.
 
 ---
 

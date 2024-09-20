@@ -1,7 +1,7 @@
 import subprocess
 from typing import List, Optional
 
-from starforge.steps.base import Step, StepFactory
+from cosmosys.steps.base import Step, StepFactory
 
 
 @StepFactory.register("git_commit")
@@ -10,8 +10,10 @@ class GitCommitStep(Step):
         super().__init__(config)
         self.commit_hash: Optional[str] = None
 
+
     def execute(self) -> bool:
         files_to_commit = self.config.get("git.files_to_commit", [])
+        self.log(f"Files to commit: {files_to_commit}")
         commit_message = self.config.get("git.commit_message", "Release {version}")
 
         if not files_to_commit:
@@ -27,6 +29,7 @@ class GitCommitStep(Step):
             self.log(f"Git operation failed: {e}")
             return False
 
+
     def rollback(self):
         if self.commit_hash:
             try:
@@ -35,19 +38,19 @@ class GitCommitStep(Step):
             except subprocess.CalledProcessError as e:
                 self.log(f"Failed to rollback git commit: {e}")
 
+
     def _git_add(self, files: List[str]):
         subprocess.run(["git", "add"] + files, check=True)
 
+
     def _git_commit(self, message: str) -> str:
-        version = self.config.get("version", "unknown")
+        version = self.config.project.version
         formatted_message = message.format(version=version)
         result = subprocess.run(
-            ["git", "commit", "-m", formatted_message],
-            capture_output=True,
-            text=True,
-            check=True
+            ["git", "commit", "-m", formatted_message], capture_output=True, text=True, check=True
         )
         return result.stdout.strip().split()[-1]
+
 
     def _git_reset(self, commit_hash: str):
         subprocess.run(["git", "reset", "--hard", f"{commit_hash}^"], check=True)

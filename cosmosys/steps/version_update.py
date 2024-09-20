@@ -1,8 +1,5 @@
-import re
 from typing import Optional
-
-from starforge.steps.base import Step, StepFactory
-
+from cosmosys.steps.base import Step, StepFactory
 
 @StepFactory.register("version_update")
 class VersionUpdateStep(Step):
@@ -12,7 +9,7 @@ class VersionUpdateStep(Step):
         self.new_version: Optional[str] = None
 
     def execute(self) -> bool:
-        self.old_version = self.config.get("version")
+        self.old_version = self.config.project.version
         self.new_version = self._get_new_version()
 
         if not self.new_version:
@@ -20,21 +17,17 @@ class VersionUpdateStep(Step):
             return False
 
         self._update_version_in_files()
-        self.config.set("version", self.new_version)
-        self.config.save()
-
+        self.config.project.version = self.new_version
         self.log(f"Updated version from {self.old_version} to {self.new_version}")
         return True
 
     def rollback(self):
         if self.old_version:
-            self.config.set("version", self.old_version)
-            self.config.save()
+            self.config.project.version = self.old_version
             self._update_version_in_files()
             self.log(f"Rolled back version to {self.old_version}")
 
     def _get_new_version(self) -> Optional[str]:
-        # TODO: Implement proper version bumping logic
         if self.old_version:
             parts = self.old_version.split(".")
             if len(parts) == 3:
@@ -43,5 +36,5 @@ class VersionUpdateStep(Step):
         return None
 
     def _update_version_in_files(self):
-        # TODO: Implement updating version in project files (e.g., pyproject.toml, __init__.py)
+        # TODO: Implement updating version in project files
         pass

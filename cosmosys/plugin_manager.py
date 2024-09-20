@@ -2,12 +2,12 @@ import importlib
 import os
 from typing import Dict, Type
 
-from starforge.config import StarForgeConfig
-from starforge.steps.base import Step, StepFactory
+from cosmosys.config import CosmosysConfig
+from cosmosys.steps.base import Step, StepFactory
 
 
 class PluginManager:
-    def __init__(self, config: StarForgeConfig):
+    def __init__(self, config: CosmosysConfig):
         self.config = config
         self.plugins: Dict[str, Type[Step]] = {}
 

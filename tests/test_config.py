@@ -1,7 +1,7 @@
 import pytest
 from mashumaro.exceptions import InvalidFieldValue
 
-from starforge.config import ProjectConfig, ReleaseConfig, StarForgeConfig, load_config
+from cosmosys.config import CosmosysConfig, ProjectConfig, ReleaseConfig, load_config
 
 
 def test_valid_config():
@@ -15,7 +15,7 @@ def test_valid_config():
         "release": {"steps": ["version_update", "git_commit"]},
         "features": {"changelog": True},
     }
-    config = StarForgeConfig.from_dict(config_data)
+    config = CosmosysConfig.from_dict(config_data)
     assert config.project.name == "TestProject"
     assert config.get_steps() == ["version_update", "git_commit"]
     assert config.is_feature_enabled("changelog")
@@ -30,8 +30,8 @@ def test_invalid_config():
         },
     }
     with pytest.raises(InvalidFieldValue) as excinfo:
-        StarForgeConfig.from_dict(invalid_config)
-    assert "Field \"project\" of type ProjectConfig in StarForgeConfig has invalid value" in str(excinfo.value)
+        CosmosysConfig.from_dict(invalid_config)
+    assert "Field \"project\" of type ProjectConfig in CosmosysConfig has invalid value" in str(excinfo.value)
 
 
 def test_custom_color_scheme():
@@ -53,7 +53,7 @@ def test_custom_color_scheme():
             }
         },
     }
-    config = StarForgeConfig.from_dict(config_data)
+    config = CosmosysConfig.from_dict(config_data)
     assert config.color_scheme == "custom"
     assert config.custom_color_schemes["custom"].primary == "blue"
 
@@ -84,7 +84,7 @@ def test_load_config(tmp_path):
 
 def test_save_config(tmp_path):
     config_file = tmp_path / "test_config.toml"
-    config = StarForgeConfig(
+    config = CosmosysConfig(
         project=ProjectConfig(name="TestProject", repo_name="test/repo", version="1.0.0"),
         color_scheme="default",
         release=ReleaseConfig(steps=["version_update", "git_commit"]),
