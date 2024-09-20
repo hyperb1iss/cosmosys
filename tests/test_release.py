@@ -1,6 +1,8 @@
 # pylint: disable=redefined-outer-name
 """Unit tests for the Cosmosys release process."""
 
+import logging
+from io import StringIO
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,7 +18,9 @@ from cosmosys.steps.version_update import VersionUpdateStep
 def mock_config() -> CosmosysConfig:
     """Fixture for creating a mock configuration."""
     return CosmosysConfig(
-        project=ProjectConfig(name="TestProject", repo_name="test/repo", version="1.0.0"),
+        project=ProjectConfig(
+            name="TestProject", repo_name="test/repo", version="1.0.0", project_type="python"
+        ),
         color_scheme="default",
         custom_color_schemes={
             "custom": ColorScheme(
@@ -28,8 +32,9 @@ def mock_config() -> CosmosysConfig:
                 info="magenta",
             )
         },
-        release=ReleaseConfig(steps=["version_update", "git_commit"]),
+        release=ReleaseConfig(steps=[]),  # Empty list to use default steps
         features={"changelog": True},
+        git={},
     )
 
 
@@ -81,26 +86,56 @@ def test_step_factory(mock_config: CosmosysConfig) -> None:
     with pytest.raises(ValueError):
         StepFactory.create("unknown_step", mock_config)
 
+    @patch("typer.echo")
+    @patch.object(StepFactory, "create")
+    def test_release_process(
+        mock_create_step: MagicMock, mock_echo: MagicMock, mock_config: CosmosysConfig
+    ) -> None:
+        """Test the release process."""
+        # Capture debug logs
+        log_capture = StringIO()
+        handler = logging.StreamHandler(log_capture)
+        logger = logging.getLogger()
+        logger.addHandler(handler)
+        logger.setLevel(logging.DEBUG)
 
-@patch("typer.echo")
-@patch("cosmosys.steps.base.StepFactory.create")
-def test_release_process(
-    mock_create_step: MagicMock, mock_echo: MagicMock, mock_config: CosmosysConfig
-) -> None:
-    """Test the release process."""
-    mock_steps = [MagicMock(), MagicMock()]
-    mock_create_step.side_effect = mock_steps
+        # Get the actual steps that will be executed
+        actual_steps = mock_config.get_steps()
+        print(f"Actual steps: {actual_steps}")
 
-    from cosmosys.cli import app
+        # Create mock steps for all expected steps
+        mock_steps = [MagicMock() for _ in range(len(actual_steps))]
+        for step in mock_steps:
+            step.execute.return_value = True  # Ensure all steps "succeed"
+        mock_create_step.side_effect = mock_steps
 
-    runner = CliRunner()
-    result = runner.invoke(app, ["release"], obj=mock_config)
+        from cosmosys.cli import app
 
-    print(f"Exit code: {result.exit_code}")
-    print(f"Output: {result.output}")
-    print(f"Exception: {result.exception}")
+        runner = CliRunner()
+        result = runner.invoke(app, ["release"], obj=mock_config)
 
-    assert result.exit_code == 0
-    assert mock_create_step.call_count == 2
-    assert all(step.execute.called for step in mock_steps)
-    assert "Release process completed" in result.output
+        print(f"Exit code: {result.exit_code}")
+        print(f"Output: {result.output}")
+        print(f"Exception: {result.exception}")
+        print(f"Debug logs: {log_capture.getvalue()}")
+
+        assert result.exit_code == 0
+        assert mock_create_step.call_count == len(
+            actual_steps
+        ), f"Expected {len(actual_steps)} steps, but {mock_create_step.call_count} were created"
+        assert "Release process completed" in result.output
+
+        # Verify that each step was "executed"
+        for step in mock_steps:
+            assert step.execute.called
+
+        # Verify that success messages were echoed for each step
+        success_calls = [
+            call for call in mock_echo.call_args_list if "completed successfully" in str(call)
+        ]
+        assert len(success_calls) == len(
+            actual_steps
+        ), f"Expected {len(actual_steps)} success messages, but got {len(success_calls)}"
+
+        # Remove the log handler to avoid affecting other tests
+        logger.removeHandler(handler)

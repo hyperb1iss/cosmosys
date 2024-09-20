@@ -1,10 +1,15 @@
-"""Configuration management for Cosmosys."""
+"""Enhanced configuration management for Cosmosys."""
 
+import json
+import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+import warnings
 
 import toml
 from mashumaro import DataClassDictMixin
+
+DEFAULT_CONFIG_FILE = "cosmosys.toml"
 
 
 @dataclass
@@ -14,6 +19,7 @@ class ProjectConfig(DataClassDictMixin):
     name: str
     repo_name: str
     version: str
+    project_type: str
     issue_tracker: Optional[str] = None
 
 
@@ -57,21 +63,107 @@ class CosmosysConfig(DataClassDictMixin):
 
         Returns:
             CosmosysConfig: Loaded configuration object.
-
-        Raises:
-            FileNotFoundError: If the configuration file is not found.
-            ValueError: If the TOML in the configuration file is invalid.
         """
         try:
             with open(config_file, "r", encoding="utf-8") as f:
                 config_data = toml.load(f)
             return cls.from_dict(config_data)
-        except FileNotFoundError as e:
-            raise FileNotFoundError(f"Configuration file not found: {config_file}") from e
+        except FileNotFoundError:
+            warnings.warn(
+                f"Configuration file not found: {config_file}. Using auto-detected configuration.",
+                UserWarning, stacklevel=2
+            )
+            return cls.auto_detect_config()
         except toml.TomlDecodeError as e:
-            raise ValueError(f"Invalid TOML in configuration file: {e}") from e
+            warnings.warn(
+                f"Invalid TOML in configuration file: {e}. Using auto-detected configuration.",
+                UserWarning, stacklevel=2
+            )
+            return cls.auto_detect_config()
 
-    def save(self, config_file: str) -> None:
+    @classmethod
+    def auto_detect_config(cls) -> "CosmosysConfig":
+        """Auto-detect project type and create a default configuration."""
+        project_type = cls.detect_project_type()
+        project_name = os.path.basename(os.getcwd())
+        version = cls.detect_version(project_type)
+
+        return cls(
+            project=ProjectConfig(
+                name=project_name,
+                repo_name=f"{project_name}/{project_name}",
+                version=version,
+                project_type=project_type,
+            ),
+            release=ReleaseConfig(steps=cls.get_default_steps(project_type)),
+        )
+
+    @staticmethod
+    def detect_project_type() -> str:
+        """Detect the type of project based on files present in the current directory."""
+        if os.path.exists("pyproject.toml"):
+            return "python"
+        if os.path.exists("Cargo.toml"):
+            return "rust"
+        if os.path.exists("package.json"):
+            return "node"
+        if os.path.exists("setup.py"):
+            return "python-setuptools"
+        return "unknown"
+
+    @staticmethod
+    def detect_version(project_type: str) -> str:
+        """Detect the current version based on the project type."""
+        if project_type == "python":
+            try:
+                with open("pyproject.toml", "r", encoding="utf-8") as f:
+                    pyproject = toml.load(f)
+                return pyproject.get("tool", {}).get("poetry", {}).get("version") or pyproject.get(
+                    "project", {}
+                ).get("version", "0.1.0")
+            except FileNotFoundError:
+                print("Warning: pyproject.toml not found. Defaulting to version 0.1.0")
+                return "0.1.0"
+            except toml.TomlDecodeError:
+                print("Warning: Invalid TOML in pyproject.toml. Defaulting to version 0.1.0")
+                return "0.1.0"
+        elif project_type == "rust":
+            try:
+                with open("Cargo.toml", "r", encoding="utf-8") as f:
+                    cargo_toml = toml.load(f)
+                return cargo_toml.get("package", {}).get("version", "0.1.0")
+            except FileNotFoundError:
+                print("Warning: Cargo.toml not found. Defaulting to version 0.1.0")
+                return "0.1.0"
+            except toml.TomlDecodeError:
+                print("Warning: Invalid TOML in Cargo.toml. Defaulting to version 0.1.0")
+                return "0.1.0"
+        elif project_type == "node":
+            try:
+                with open("package.json", "r", encoding="utf-8") as f:
+                    package_json = json.load(f)
+                return package_json.get("version", "0.1.0")
+            except FileNotFoundError:
+                print("Warning: package.json not found. Defaulting to version 0.1.0")
+                return "0.1.0"
+            except json.JSONDecodeError:
+                print("Warning: Invalid JSON in package.json. Defaulting to version 0.1.0")
+                return "0.1.0"
+        return "0.1.0"
+
+    @staticmethod
+    def get_default_steps(project_type: str) -> List[str]:
+        """Get default release steps based on the project type."""
+        common_steps = ["version_update", "changelog_update", "git_commit", "git_tag"]
+        if project_type == "python":
+            return common_steps + ["build_python", "publish_pypi"]
+        elif project_type == "rust":
+            return common_steps + ["build_rust", "publish_crates_io"]
+        elif project_type == "node":
+            return common_steps + ["build_node", "publish_npm"]
+        return common_steps
+
+    def save(self, config_file: str = DEFAULT_CONFIG_FILE) -> None:
         """
         Save the configuration to a file.
 
@@ -126,29 +218,23 @@ class CosmosysConfig(DataClassDictMixin):
         Returns:
             List[str]: The list of release steps.
         """
-        return self.release.steps
+        if self.release.steps:
+            return self.release.steps
+        return self.get_default_steps(self.project.project_type)
 
     def is_feature_enabled(self, feature: str) -> bool:
-        """
-        Check if a feature is enabled.
-
-        Args:
-            feature (str): The name of the feature to check.
-
-        Returns:
-            bool: True if the feature is enabled, False otherwise.
-        """
+        """Check if a feature is enabled."""
         return self.features.get(feature, False)
 
 
-def load_config(config_file: str) -> CosmosysConfig:
+def load_config(config_file: str = DEFAULT_CONFIG_FILE) -> CosmosysConfig:
     """
-    Load the configuration from a file.
+        Load the configuration from a file.
 
-    Args:
-        config_file (str): Path to the configuration file.
+        Args:
+            config_file (str): Path to the configuration file.
 
-    Returns:
-        CosmosysConfig: The loaded configuration object.
-    """
+        Returns:
+            CosmosysConfig: The loaded or auto-detected configuration object.
+   """
     return CosmosysConfig.from_file(config_file)

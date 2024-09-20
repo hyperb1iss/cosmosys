@@ -1,5 +1,6 @@
 """Command-line interface for Cosmosys."""
 
+import logging
 import typer
 from typer import Context, Option
 
@@ -11,6 +12,8 @@ from cosmosys.steps.base import StepFactory
 
 app = typer.Typer()
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 class CosmosysContext:
     """Context object for Cosmosys CLI commands."""
@@ -64,10 +67,13 @@ def release(
         typer.echo(color_manager.warning("Dry run mode: No changes will be made"))
 
     steps = config.get_steps()
+    logger.debug(f"Steps to execute: {steps}")
 
     for step_name in steps:
+        logger.debug(f"Processing step: {step_name}")
         try:
             step = StepFactory.create(step_name, config)
+            logger.debug(f"Created step: {step}")
             typer.echo(color_manager.info(f"Executing step: {step_name}"))
             if not dry_run:
                 if step.execute():
@@ -78,11 +84,40 @@ def release(
             else:
                 typer.echo(color_manager.info(f"Dry run: Step {step_name} would be executed"))
         except Exception as e:
+            logger.exception(f"Error in step {step_name}")
             typer.echo(color_manager.error(f"Error in step {step_name}: {str(e)}"))
             break
 
     typer.echo(ascii_art_manager.render_starfield(color="secondary"))
     typer.echo(color_manager.primary("Release process completed"))
+
+@app.command()
+def config(
+    set_key: str = Option(None, "--set", help="Set a configuration value"),
+    set_value: str = Option(None, "--value", help="Value to set"),
+    get_key: str = Option(None, "--get", help="Get a configuration value"),
+    init: bool = Option(False, "--init", help="Initialize a new configuration file"),
+):
+    """Manage Cosmosys configuration."""
+    if init:
+        config = CosmosysConfig.auto_detect_config()
+        config.save()
+        typer.echo("Initialized new configuration file: cosmosys.toml")
+    else:
+        config = load_config()
+
+    if set_key and set_value:
+        config.set(set_key, set_value)
+        config.save()
+        typer.echo(f"Set {set_key} to {set_value}")
+
+    if get_key:
+        value = config.get(get_key)
+        typer.echo(f"{get_key}: {value}")
+
+    if not any([init, set_key, get_key]):
+        typer.echo("Current configuration:")
+        typer.echo(config.to_dict())
 
 
 @app.command()
