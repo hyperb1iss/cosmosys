@@ -84,11 +84,11 @@ class CosmosysConfig(DataClassDictMixin):
             return cls.auto_detect_config()
 
     @classmethod
-    def auto_detect_config(cls) -> "CosmosysConfig":
+    def auto_detect_config(cls, base_path: Optional[str] = None) -> "CosmosysConfig":
         """Auto-detect project type and create a default configuration."""
-        project_type = cls.detect_project_type()
-        project_name = os.path.basename(os.getcwd())
-        version = cls.detect_version(project_type)
+        project_type = cls.detect_project_type(base_path)
+        project_name = os.path.basename(base_path or os.getcwd())
+        version = cls.detect_version(project_type, base_path)
 
         return cls(
             project=ProjectConfig(
@@ -101,29 +101,30 @@ class CosmosysConfig(DataClassDictMixin):
         )
 
     @staticmethod
-    def detect_project_type() -> str:
-        """Detect the type of project based on files present in the current directory."""
-        if os.path.exists("pyproject.toml"):
+    def detect_project_type(base_path: Optional[str] = None) -> str:
+        """Detect the type of project based on files present in the given directory."""
+        base_path = base_path or os.getcwd()
+        if os.path.exists(os.path.join(base_path, "pyproject.toml")):
             return "python"
-        if os.path.exists("Cargo.toml"):
+        if os.path.exists(os.path.join(base_path, "Cargo.toml")):
             return "rust"
-        if os.path.exists("package.json"):
+        if os.path.exists(os.path.join(base_path, "package.json")):
             return "node"
-        if os.path.exists("setup.py"):
+        if os.path.exists(os.path.join(base_path, "setup.py")):
             return "python-setuptools"
         return "unknown"
 
     @staticmethod
-    def detect_version(project_type: str) -> str:
+    def detect_version(project_type: str, base_path: Optional[str] = None) -> str:
         """Detect the current version based on the project type."""
+        base_path = base_path or os.getcwd()
         if project_type == "python":
             try:
-                with open("pyproject.toml", "r", encoding="utf-8") as f:
+                with open(os.path.join(base_path, "pyproject.toml"), "r", encoding="utf-8") as f:
                     pyproject = toml.load(f)
-                return str(
-                    pyproject.get("tool", {}).get("poetry", {}).get("version")
-                    or pyproject.get("project", {}).get("version", "0.1.0")
-                )
+                return pyproject.get("tool", {}).get("poetry", {}).get("version") or pyproject.get(
+                    "project", {}
+                ).get("version", "0.1.0")
             except FileNotFoundError:
                 print("Warning: pyproject.toml not found. Defaulting to version 0.1.0")
                 return "0.1.0"
@@ -132,9 +133,9 @@ class CosmosysConfig(DataClassDictMixin):
                 return "0.1.0"
         elif project_type == "rust":
             try:
-                with open("Cargo.toml", "r", encoding="utf-8") as f:
+                with open(os.path.join(base_path, "Cargo.toml"), "r", encoding="utf-8") as f:
                     cargo_toml = toml.load(f)
-                return str(cargo_toml.get("package", {}).get("version", "0.1.0"))
+                return cargo_toml.get("package", {}).get("version", "0.1.0")
             except FileNotFoundError:
                 print("Warning: Cargo.toml not found. Defaulting to version 0.1.0")
                 return "0.1.0"
@@ -143,9 +144,9 @@ class CosmosysConfig(DataClassDictMixin):
                 return "0.1.0"
         elif project_type == "node":
             try:
-                with open("package.json", "r", encoding="utf-8") as f:
+                with open(os.path.join(base_path, "package.json"), "r", encoding="utf-8") as f:
                     package_json = json.load(f)
-                return str(package_json.get("version", "0.1.0"))
+                return package_json.get("version", "0.1.0")
             except FileNotFoundError:
                 print("Warning: package.json not found. Defaulting to version 0.1.0")
                 return "0.1.0"
