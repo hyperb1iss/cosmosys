@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 """Command-line interface for Cosmosys."""
 
 import logging
@@ -18,13 +19,12 @@ logger = logging.getLogger(__name__)
 class CosmosysContext:
     """Context object for Cosmosys CLI commands."""
 
-    def __init__(self, config_file: str, color_scheme: str):
+    def __init__(self, config_file: str):
         """
         Initialize the Cosmosys context.
 
         Args:
             config_file (str): Path to the configuration file.
-            color_scheme (str): Name of the color scheme to use.
         """
         self.config: CosmosysConfig = load_config(config_file)
         self.color_manager: ColorManager = ColorManager(self.config)
@@ -37,11 +37,10 @@ class CosmosysContext:
 def callback(
     ctx: Context,
     config: str = Option("cosmosys.toml", help="Path to the configuration file"),
-    color_scheme: str = Option("default", help="Color scheme to use"),
 ) -> None:
     """Cosmosys: A flexible and customizable release management tool."""
     if not isinstance(ctx.obj, CosmosysContext):
-        ctx.obj = CosmosysContext(config, color_scheme)
+        ctx.obj = CosmosysContext(config)
 
 
 @app.command()
@@ -67,13 +66,13 @@ def release(
         typer.echo(color_manager.warning("Dry run mode: No changes will be made"))
 
     steps = config.get_steps()
-    logger.debug(f"Steps to execute: {steps}")
+    logger.debug("Steps to execute: %s", steps)
 
     for step_name in steps:
-        logger.debug(f"Processing step: {step_name}")
+        logger.debug("Processing step: %s", step_name)
         try:
             step = StepFactory.create(step_name, config)
-            logger.debug(f"Created step: {step}")
+            logger.debug("Created step: %s", step)
             typer.echo(color_manager.info(f"Executing step: {step_name}"))
             if not dry_run:
                 if step.execute():
@@ -84,7 +83,7 @@ def release(
             else:
                 typer.echo(color_manager.info(f"Dry run: Step {step_name} would be executed"))
         except Exception as e:
-            logger.exception(f"Error in step {step_name}")
+            logger.exception("Error in step %s", step_name, exc_info=e)
             typer.echo(color_manager.error(f"Error in step {step_name}: {str(e)}"))
             break
 
@@ -97,7 +96,7 @@ def config(
     set_value: str = Option(None, "--value", help="Value to set"),
     get_key: str = Option(None, "--get", help="Get a configuration value"),
     init: bool = Option(False, "--init", help="Initialize a new configuration file"),
-):
+) -> None:
     """Manage Cosmosys configuration."""
     if init:
         config = CosmosysConfig.auto_detect_config()

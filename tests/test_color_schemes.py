@@ -12,7 +12,9 @@ from cosmosys.config import ColorScheme, CosmosysConfig, ProjectConfig
 def default_config() -> CosmosysConfig:
     """Fixture for creating a default configuration."""
     return CosmosysConfig(
-        project=ProjectConfig(name="TestProject", repo_name="test/repo", version="1.0.0", project_type="python"),
+        project=ProjectConfig(
+            name="TestProject", repo_name="test/repo", version="1.0.0", project_type="python"
+        ),
         color_scheme="default",
     )
 
@@ -21,7 +23,9 @@ def default_config() -> CosmosysConfig:
 def custom_config() -> CosmosysConfig:
     """Fixture for creating a configuration with a custom color scheme."""
     return CosmosysConfig(
-        project=ProjectConfig(name="TestProject", repo_name="test/repo", version="1.0.0", project_type="python"),
+        project=ProjectConfig(
+            name="TestProject", repo_name="test/repo", version="1.0.0", project_type="python"
+        ),
         color_scheme="custom",
         custom_color_schemes={
             "custom": ColorScheme(

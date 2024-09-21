@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from typer.testing import CliRunner
 
+from cosmosys.cli import app
 from cosmosys.config import ColorScheme, CosmosysConfig, ProjectConfig, ReleaseConfig
 from cosmosys.steps.base import StepFactory
 from cosmosys.steps.git_commit import GitCommitStep
@@ -108,8 +109,6 @@ def test_step_factory(mock_config: CosmosysConfig) -> None:
         for step in mock_steps:
             step.execute.return_value = True  # Ensure all steps "succeed"
         mock_create_step.side_effect = mock_steps
-
-        from cosmosys.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["release"], obj=mock_config)

@@ -71,13 +71,15 @@ class CosmosysConfig(DataClassDictMixin):
         except FileNotFoundError:
             warnings.warn(
                 f"Configuration file not found: {config_file}. Using auto-detected configuration.",
-                UserWarning, stacklevel=2
+                UserWarning,
+                stacklevel=2,
             )
             return cls.auto_detect_config()
         except toml.TomlDecodeError as e:
             warnings.warn(
                 f"Invalid TOML in configuration file: {e}. Using auto-detected configuration.",
-                UserWarning, stacklevel=2
+                UserWarning,
+                stacklevel=2,
             )
             return cls.auto_detect_config()
 
@@ -118,9 +120,10 @@ class CosmosysConfig(DataClassDictMixin):
             try:
                 with open("pyproject.toml", "r", encoding="utf-8") as f:
                     pyproject = toml.load(f)
-                return pyproject.get("tool", {}).get("poetry", {}).get("version") or pyproject.get(
-                    "project", {}
-                ).get("version", "0.1.0")
+                return str(
+                    pyproject.get("tool", {}).get("poetry", {}).get("version")
+                    or pyproject.get("project", {}).get("version", "0.1.0")
+                )
             except FileNotFoundError:
                 print("Warning: pyproject.toml not found. Defaulting to version 0.1.0")
                 return "0.1.0"
@@ -131,7 +134,7 @@ class CosmosysConfig(DataClassDictMixin):
             try:
                 with open("Cargo.toml", "r", encoding="utf-8") as f:
                     cargo_toml = toml.load(f)
-                return cargo_toml.get("package", {}).get("version", "0.1.0")
+                return str(cargo_toml.get("package", {}).get("version", "0.1.0"))
             except FileNotFoundError:
                 print("Warning: Cargo.toml not found. Defaulting to version 0.1.0")
                 return "0.1.0"
@@ -142,7 +145,7 @@ class CosmosysConfig(DataClassDictMixin):
             try:
                 with open("package.json", "r", encoding="utf-8") as f:
                     package_json = json.load(f)
-                return package_json.get("version", "0.1.0")
+                return str(package_json.get("version", "0.1.0"))
             except FileNotFoundError:
                 print("Warning: package.json not found. Defaulting to version 0.1.0")
                 return "0.1.0"
@@ -157,9 +160,9 @@ class CosmosysConfig(DataClassDictMixin):
         common_steps = ["version_update", "changelog_update", "git_commit", "git_tag"]
         if project_type == "python":
             return common_steps + ["build_python", "publish_pypi"]
-        elif project_type == "rust":
+        if project_type == "rust":
             return common_steps + ["build_rust", "publish_crates_io"]
-        elif project_type == "node":
+        if project_type == "node":
             return common_steps + ["build_node", "publish_npm"]
         return common_steps
 
@@ -229,12 +232,12 @@ class CosmosysConfig(DataClassDictMixin):
 
 def load_config(config_file: str = DEFAULT_CONFIG_FILE) -> CosmosysConfig:
     """
-        Load the configuration from a file.
+    Load the configuration from a file.
 
-        Args:
-            config_file (str): Path to the configuration file.
+    Args:
+        config_file (str): Path to the configuration file.
 
-        Returns:
-            CosmosysConfig: The loaded or auto-detected configuration object.
-   """
+    Returns:
+        CosmosysConfig: The loaded or auto-detected configuration object.
+    """
     return CosmosysConfig.from_file(config_file)

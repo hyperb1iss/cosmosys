@@ -64,4 +64,3 @@ class VersionUpdateStep(Step):
     def _update_version_in_files(self) -> None:
         """Update the version number in project files."""
         # TODO: Implement updating version in project files
-        pass
