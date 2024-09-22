@@ -1,47 +1,70 @@
 #!/usr/bin/env python3
 
-"""Lint script for the Cosmosys project."""
+"""Linting scripts for Cosmosys project."""
 
 import subprocess
 import sys
-from typing import List, Tuple
+
+import typer
+
+app = typer.Typer()
 
 
-def run_command(command: List[str]) -> Tuple[int, str]:
-    """Run a command and return its exit code and output."""
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
-    return result.returncode, result.stdout
+@app.command()
+def run_pylint() -> None:
+    """Run Pylint on the project."""
+    result = subprocess.run(
+        ["pylint", "cosmosys", "tests", "scripts"],
+        capture_output=True,
+        text=True,
+    )
+    print(result.stdout)
+    if result.returncode != 0:
+        sys.exit(result.returncode)
+
+
+@app.command()
+def run_mypy() -> None:
+    """Run Mypy on the project."""
+    result = subprocess.run(
+        ["mypy", "cosmosys", "tests", "scripts"],
+        capture_output=True,
+        text=True,
+    )
+    print(result.stdout)
+    if result.returncode != 0:
+        sys.exit(result.returncode)
+
+
+@app.command()
+def run_ruff() -> None:
+    """Run Ruff on the project."""
+    result = subprocess.run(
+        ["ruff", "cosmosys", "tests", "scripts"],
+        capture_output=True,
+        text=True,
+    )
+    print(result.stdout)
+    if result.returncode != 0:
+        sys.exit(result.returncode)
+
+
+@app.command()
+def lint_all() -> None:
+    """Run all linters on the project."""
+    run_pylint()
+    run_mypy()
+    run_ruff()
 
 
 def run_lint() -> None:
-    """Run linting checks on the project using pylint, mypy, and ruff."""
-    print("Running linting checks...")
-
-    linters = [
-        ("Pylint", ["pylint", "cosmosys", "tests", "scripts"]),
-        ("Mypy", ["mypy", "cosmosys", "tests", "scripts"]),
-        ("Ruff", ["ruff", "check", "cosmosys", "tests", "scripts"]),
-    ]
-
-    exit_code = 0
-
-    for linter_name, command in linters:
-        print(f"\nRunning {linter_name}...")
-        returncode, output = run_command(command)
-
-        if returncode != 0:
-            print(f"{linter_name} issues found:")
-            print(output)
-            exit_code = 1
-        else:
-            print(f"{linter_name} checks passed.")
-
-    if exit_code == 0:
-        print("\nAll linting checks passed!")
+    """Entry point for the linting scripts."""
+    if len(sys.argv) == 1:
+        # No arguments were provided, default to lint_all
+        lint_all()
     else:
-        print("\nLinting checks failed. Please fix the issues and try again.")
-
-    sys.exit(exit_code)
+        # Otherwise, use Typer to handle commands
+        app()
 
 
 if __name__ == "__main__":

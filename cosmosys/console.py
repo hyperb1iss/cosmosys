@@ -1,6 +1,9 @@
 """Console helpers for Cosmosys."""
 
+from typing import Optional, List, Any
+
 from rich.console import Console
+from rich.table import Table
 from wcwidth import wcswidth
 
 from cosmosys.theme import ThemeManager
@@ -9,53 +12,52 @@ from cosmosys.theme import ThemeManager
 class CosmosysConsole:
     """Wrapper class for Rich console with theme-aware printing methods."""
 
-    def __init__(self, console: Console, theme_manager: ThemeManager):
+    def __init__(self, console: Console, theme_manager: ThemeManager) -> None:
         self.console = console
         self.theme_manager = theme_manager
 
-    def print(self, text: str, style: str = None):
+    def print(self, text: str, style: Optional[str] = None) -> None:
         """Print text with optional style."""
         if style:
-            self.console.print(getattr(self.theme_manager, style)(text))
+            styled_text = getattr(self.theme_manager, style)(text)
+            self.console.print(styled_text)
         else:
             self.console.print(text)
 
-    def info(self, text: str):
+    def info(self, text: str) -> None:
         """Print info message."""
         self.print(text, "info")
 
-    def success(self, text: str):
+    def success(self, text: str) -> None:
         """Print success message."""
         self.print(text, "success")
 
-    def warning(self, text: str):
+    def warning(self, text: str) -> None:
         """Print warning message."""
         self.print(text, "warning")
 
-    def error(self, text: str):
+    def error(self, text: str) -> None:
         """Print error message."""
         self.print(text, "error")
 
-    def primary(self, text: str):
+    def primary(self, text: str) -> None:
         """Print text in primary color."""
         self.print(text, "primary")
 
-    def secondary(self, text: str):
+    def secondary(self, text: str) -> None:
         """Print text in secondary color."""
         self.print(text, "secondary")
 
-    def rainbow(self, text: str):
+    def rainbow(self, text: str) -> None:
         """Print text with rainbow effect."""
         self.console.print(self.theme_manager.rainbow(text))
 
-    def gradient(self, text: str, start_color: str, end_color: str):
+    def gradient(self, text: str, start_color: str, end_color: str) -> None:
         """Print text with gradient effect."""
         self.console.print(self.theme_manager.gradient(text, start_color, end_color))
 
-    def print_table(self, headers: list, rows: list):
+    def print_table(self, headers: List[str], rows: List[List[Any]]) -> None:
         """Print a table with proper alignment for wide characters."""
-        from rich.table import Table
-
         table = Table()
         for header in headers:
             table.add_column(header)

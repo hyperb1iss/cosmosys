@@ -19,5 +19,6 @@ class PublishCratesIoStep(Step):
 
     def rollback(self) -> None:
         self.log(
-            "Warning: Cannot automatically unpublish from Crates.io. Please manually remove the package if necessary."
+            "Warning: Cannot automatically unpublish from Crates.io. "
+            "Please manually remove the package if necessary."
         )

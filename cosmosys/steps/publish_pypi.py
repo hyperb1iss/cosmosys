@@ -19,5 +19,6 @@ class PublishPyPIStep(Step):
 
     def rollback(self) -> None:
         self.log(
-            "Warning: Cannot automatically unpublish from PyPI. Please manually remove the package if necessary."
+            "Warning: Cannot automatically unpublish from PyPI. "
+            "Please manually remove the package if necessary."
         )

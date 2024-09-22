@@ -1,9 +1,14 @@
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,protected-access
 """Unit tests for the Cosmosys theme module."""
 
 import pytest
 
-from cosmosys.config import CosmosysConfig, ProjectConfig, ReleaseConfig, ThemeConfig
+from cosmosys.config import (
+    CosmosysConfig,
+    ProjectConfig,
+    ReleaseConfig,
+    ThemeConfig,
+)
 from cosmosys.theme import ThemeManager
 
 
@@ -12,7 +17,10 @@ def default_config() -> CosmosysConfig:
     """Fixture for creating a default configuration."""
     return CosmosysConfig(
         project=ProjectConfig(
-            name="TestProject", repo_name="test/repo", version="1.0.0", project_type="python"
+            name="TestProject",
+            repo_name="test/repo",
+            version="1.0.0",
+            project_type="python",
         ),
         theme="default",
         git={
@@ -28,7 +36,10 @@ def custom_config() -> CosmosysConfig:
     """Fixture for creating a configuration with a custom theme."""
     return CosmosysConfig(
         project=ProjectConfig(
-            name="TestProject", repo_name="test/repo", version="1.0.0", project_type="python"
+            name="TestProject",
+            repo_name="test/repo",
+            version="1.0.0",
+            project_type="python",
         ),
         theme="custom",
         custom_themes={
@@ -68,10 +79,9 @@ def test_colorize(default_config: CosmosysConfig) -> None:
     """Test the colorize method."""
     theme_manager = ThemeManager(default_config)
     colored_text = theme_manager.primary("Test")
-    assert (
-        ThemeManager._color_to_hex(colored_text.style.color)
-        == theme_manager.get_color("primary").lower()
-    )
+    expected_color = theme_manager.get_color("primary").lower()
+    actual_color = theme_manager._color_to_hex(colored_text.style.color)
+    assert actual_color == expected_color
 
 
 def test_set_scheme(default_config: CosmosysConfig) -> None:

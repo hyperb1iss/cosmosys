@@ -1,8 +1,9 @@
+# pylint: disable=too-many-locals
 """Theme management for Cosmosys."""
 
 import os
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import toml
 from mashumaro import DataClassDictMixin
@@ -37,7 +38,7 @@ class ThemeManager(DataClassDictMixin):
     def load_themes() -> Dict[str, ThemeConfig]:
         """Load themes from the themes.toml file."""
         themes_file = os.path.join(os.path.dirname(__file__), "themes.toml")
-        with open(themes_file, "r") as f:
+        with open(themes_file, "r", encoding="utf-8") as f:
             themes_data = toml.load(f)
 
         return {name: ThemeConfig(**theme) for name, theme in themes_data.items()}
@@ -116,7 +117,7 @@ class ThemeManager(DataClassDictMixin):
         return [int(hex_color[i : i + 2], 16) for i in (0, 2, 4)]
 
     @staticmethod
-    def _color_to_hex(color: Color) -> str:
+    def _color_to_hex(color: Optional[Color]) -> str:
         """Convert Rich Color object to a hex string."""
         if color is None:
             return "#FFFFFF"  # Default to white if no color is set
@@ -124,12 +125,13 @@ class ThemeManager(DataClassDictMixin):
 
     def apply_style(self, text: str, style_name: str) -> Text:
         """Apply a predefined style to the text."""
-        style_methods = {
-            "bold": lambda t: Text(t, style=Style(bold=True)),
-            "italic": lambda t: Text(t, style=Style(italic=True)),
-            "underline": lambda t: Text(t, style=Style(underline=True)),
-        }
-        return style_methods.get(style_name, lambda t: Text(t))(text)
+        if style_name == "bold":
+            return Text(text, style=Style(bold=True))
+        if style_name == "italic":
+            return Text(text, style=Style(italic=True))
+        if style_name == "underline":
+            return Text(text, style=Style(underline=True))
+        return Text(text)
 
 
 def preview_theme(theme_manager: ThemeManager, console: Console) -> None:

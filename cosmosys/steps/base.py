@@ -9,7 +9,7 @@ from cosmosys.config import CosmosysConfig
 class Step(ABC):
     """Abstract base class for release steps."""
 
-    def __init__(self, config: CosmosysConfig):
+    def __init__(self, config: CosmosysConfig) -> None:
         """
         Initialize a Step instance.
 
@@ -26,10 +26,12 @@ class Step(ABC):
         Returns:
             bool: True if the step was successful, False otherwise.
         """
+        pass
 
     @abstractmethod
     def rollback(self) -> None:
         """Rollback the changes made by this step."""
+        pass
 
     def log(self, message: str) -> None:
         """

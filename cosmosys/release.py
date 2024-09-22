@@ -1,5 +1,7 @@
+# pylint: disable=broad-exception-caught
 """Release management module for Cosmosys."""
 
+from typing import List
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
 from cosmosys.config import CosmosysConfig
@@ -10,7 +12,9 @@ from cosmosys.steps.base import StepFactory
 class ReleaseManager:
     """Manages the execution of release steps."""
 
-    def __init__(self, config: CosmosysConfig, console: CosmosysConsole, verbose: bool):
+    def __init__(
+        self, config: CosmosysConfig, console: CosmosysConsole, verbose: bool
+    ) -> None:
         """
         Initialize the ReleaseManager.
 
@@ -23,11 +27,11 @@ class ReleaseManager:
         self.console = console
         self.verbose = verbose
 
-    def execute_steps(self, steps: list, dry_run: bool) -> bool:
+    def execute_steps(self, steps: List[str], dry_run: bool) -> bool:
         """Execute the list of release steps.
 
         Args:
-            steps (list): List of step names to execute.
+            steps (List[str]): List of step names to execute.
             dry_run (bool): Whether to perform a dry run.
 
         Returns:
@@ -54,7 +58,9 @@ class ReleaseManager:
                             completed=True,
                             description=f"Dry run: {step_name}",
                         )
-                        self.console.info(f"Dry run: {step_name} (simulated execution)")
+                        self.console.info(
+                            f"Dry run: {step_name} (simulated execution)"
+                        )
                     elif step.execute():
                         progress.update(
                             task,
@@ -79,17 +85,19 @@ class ReleaseManager:
                         description=f"Error: {step_name}",
                     )
                     if self.verbose:
-                        self.console.error(f"Detailed error: {type(e).__name__}: {str(e)}")
+                        self.console.error(
+                            f"Detailed error: {type(e).__name__}: {str(e)}"
+                        )
                     self.rollback_steps(steps[: steps.index(step_name)])
                     success = False
                     break
         return success
 
-    def rollback_steps(self, executed_steps: list) -> None:
+    def rollback_steps(self, executed_steps: List[str]) -> None:
         """Rollback the executed steps in reverse order.
 
         Args:
-            executed_steps (list): List of executed step names.
+            executed_steps (List[str]): List of executed step names.
         """
         self.console.warning("Rolling back changes...")
         for step_name in reversed(executed_steps):

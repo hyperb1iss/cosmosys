@@ -18,6 +18,7 @@ class BuildRustStep(Step):
             return False
 
     def rollback(self) -> None:
-        # Remove build artifacts
-        subprocess.run(["cargo", "clean"])
-        self.log("Removed Rust build artifacts")
+        self.log(
+            "Rollback not supported for build_rust step. "
+            "Please clean build artifacts manually if necessary."
+        )

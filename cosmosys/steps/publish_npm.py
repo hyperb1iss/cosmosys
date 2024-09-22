@@ -1,6 +1,7 @@
 """Publish npm step for Cosmosys release process."""
 
 import subprocess
+
 from cosmosys.steps.base import Step, StepFactory
 
 
@@ -19,5 +20,6 @@ class PublishNpmStep(Step):
 
     def rollback(self) -> None:
         self.log(
-            "Warning: Cannot automatically unpublish from npm. Please manually remove the package if necessary."
+            "Warning: Cannot automatically unpublish from npm. "
+            "Please manually remove the package if necessary."
         )

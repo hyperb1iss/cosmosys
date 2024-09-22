@@ -1,4 +1,4 @@
-"""Build Node step for Cosmosys release process."""
+"""Build Node.js step for Cosmosys release process."""
 
 import subprocess
 from cosmosys.steps.base import Step, StepFactory
@@ -18,6 +18,7 @@ class BuildNodeStep(Step):
             return False
 
     def rollback(self) -> None:
-        # Remove build artifacts
-        subprocess.run(["rm", "-rf", "dist", "build"], shell=True)
-        self.log("Removed Node.js build artifacts")
+        self.log(
+            "Rollback not supported for build_node step. "
+            "Please clean build artifacts manually if necessary."
+        )

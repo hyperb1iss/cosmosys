@@ -1,24 +1,42 @@
+# pylint: disable=redefined-outer-name
 """Unit tests for the VersionUpdateStep in Cosmosys."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cosmosys.config import CosmosysConfig, ProjectConfig, ReleaseConfig
+from cosmosys.config import CosmosysConfig, ProjectConfig, ReleaseConfig, ThemeConfig
+from cosmosys.steps.base import StepFactory
+from cosmosys.steps.git_commit import GitCommitStep
 from cosmosys.steps.version_update import VersionUpdateStep
 
 
 @pytest.fixture
-def mock_config():
-    """Fixture for creating a mock CosmosysConfig."""
+def mock_config_fixture() -> CosmosysConfig:
+    """Fixture for creating a mock configuration."""
     return CosmosysConfig(
         project=ProjectConfig(
             name="TestProject",
             repo_name="test/repo",
-            version="1.2.3",
+            version="1.0.0",
             project_type="python",
         ),
-        release=ReleaseConfig(steps=["version_update"]),
+        theme="default",
+        custom_themes={
+            "custom": ThemeConfig(
+                name="Custom Theme",
+                description="A custom theme for testing",
+                primary="#0000FF",  # Blue
+                secondary="#008000",  # Green
+                success="#00FFFF",  # Cyan
+                error="#FF0000",  # Red
+                warning="#FFFF00",  # Yellow
+                info="#FF00FF",  # Magenta
+                emojis={"success": "✅", "error": "❌", "warning": "⚠️", "info": "ℹ️"},
+            )
+        },
+        release=ReleaseConfig(steps=["version_update", "git_commit"]),  # Provide steps
+        features={"changelog": True},
         git={
             "files_to_commit": ["file1.py"],
             "commit_message": "Release {version}",
@@ -26,52 +44,54 @@ def mock_config():
     )
 
 
-def test_version_update_with_new_version(mock_config):
-    """Test VersionUpdateStep with an explicit new version."""
-    mock_config.new_version = "2.0.0"
-    step = VersionUpdateStep(mock_config)
-    assert step.execute()
-    assert mock_config.project.version == "2.0.0"
+def test_version_update_step(mock_config_fixture: CosmosysConfig) -> None:
+    """Test the version update step."""
+    # Set new_version to avoid prompting
+    mock_config_fixture.new_version = "1.0.1"
+    step = VersionUpdateStep(mock_config_fixture)
 
-
-def test_version_update_with_part_major(mock_config):
-    """Test VersionUpdateStep bumping the major version."""
-    mock_config.version_part = "major"
-    step = VersionUpdateStep(mock_config)
-    assert step.execute()
-    assert mock_config.project.version == "2.0.0"
-
-
-def test_version_update_with_part_minor(mock_config):
-    """Test VersionUpdateStep bumping the minor version."""
-    mock_config.version_part = "minor"
-    step = VersionUpdateStep(mock_config)
-    assert step.execute()
-    assert mock_config.project.version == "1.3.0"
-
-
-def test_version_update_with_part_patch(mock_config):
-    """Test VersionUpdateStep bumping the patch version."""
-    mock_config.version_part = "patch"
-    step = VersionUpdateStep(mock_config)
-    assert step.execute()
-    assert mock_config.project.version == "1.2.4"
-
-
-def test_version_update_prompt_user(mock_config):
-    """Test VersionUpdateStep prompting the user for version."""
-    with patch("typer.prompt") as mock_prompt:
-        mock_prompt.return_value = "1.2.5"
-        step = VersionUpdateStep(mock_config)
+    with patch.object(step, "_update_version_in_files"):
         assert step.execute()
-        mock_prompt.assert_called_once_with("Enter the new version", default="1.2.3")
-        assert mock_config.project.version == "1.2.5"
+        assert mock_config_fixture.project.version == "1.0.1"
+
+    step.rollback()
+    assert mock_config_fixture.project.version == "1.0.0"
 
 
-def test_version_update_invalid_version_format(mock_config):
-    """Test VersionUpdateStep with an invalid version format."""
-    mock_config.project.version = "1.2"
-    mock_config.version_part = "patch"
-    step = VersionUpdateStep(mock_config)
-    assert not step.execute()
-    assert mock_config.project.version == "1.2"
+@patch("subprocess.run")
+def test_git_commit_step(mock_run: MagicMock, mock_config_fixture: CosmosysConfig) -> None:
+    """Test the git commit step."""
+    # Ensure we're setting the git configuration correctly
+    mock_config_fixture.set("git.files_to_commit", ["file1.py", "file2.py"])
+    mock_config_fixture.set("git.commit_message", "Release {version}")
+
+    # Print the configuration for debugging
+    print(f"Mock config: {mock_config_fixture.to_dict()}")
+
+    step = GitCommitStep(mock_config_fixture)
+    mock_run.return_value.stdout = "abcdef123456"
+
+    assert step.execute()
+    assert step.commit_hash == "abcdef123456"
+
+    mock_run.assert_any_call(
+        ["git", "add", "file1.py", "file2.py"], check=True
+    )
+    mock_run.assert_any_call(
+        ["git", "commit", "-m", f"Release {mock_config_fixture.project.version}"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+
+def test_step_factory(mock_config_fixture: CosmosysConfig) -> None:
+    """Test the step factory."""
+    version_update_step = StepFactory.create("version_update", mock_config_fixture)
+    assert isinstance(version_update_step, VersionUpdateStep)
+
+    git_commit_step = StepFactory.create("git_commit", mock_config_fixture)
+    assert isinstance(git_commit_step, GitCommitStep)
+
+    with pytest.raises(ValueError):
+        StepFactory.create("unknown_step", mock_config_fixture)

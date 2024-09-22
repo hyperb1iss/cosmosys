@@ -11,7 +11,7 @@ from cosmosys.steps.base import Step, StepFactory
 class PluginManager:
     """Manages the loading and retrieval of plugins for Cosmosys."""
 
-    def __init__(self, config: CosmosysConfig):
+    def __init__(self, config: CosmosysConfig) -> None:
         """
         Initialize a PluginManager instance.
 
@@ -76,4 +76,7 @@ class PluginManager:
         Returns:
             Dict[str, str]: A dictionary of plugin names and descriptions.
         """
-        return {name: (cls.__doc__ or "No description available") for name, cls in self.plugins.items()}
+        return {
+            name: (cls.__doc__ or "No description available")
+            for name, cls in self.plugins.items()
+        }

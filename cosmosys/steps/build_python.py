@@ -10,7 +10,10 @@ class BuildPythonStep(Step):
 
     def execute(self) -> bool:
         try:
-            subprocess.run(["python", "-m", "build"], check=True)
+            subprocess.run(
+                ["python", "setup.py", "sdist", "bdist_wheel"],
+                check=True
+            )
             self.log("Successfully built Python package")
             return True
         except subprocess.CalledProcessError as e:
@@ -18,6 +21,7 @@ class BuildPythonStep(Step):
             return False
 
     def rollback(self) -> None:
-        # Remove build artifacts
-        subprocess.run(["rm", "-rf", "dist", "build", "*.egg-info"], shell=True)
-        self.log("Removed build artifacts")
+        self.log(
+            "Rollback not supported for build_python step. "
+            "Please clean build artifacts manually if necessary."
+        )

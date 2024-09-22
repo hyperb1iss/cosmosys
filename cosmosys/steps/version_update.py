@@ -12,12 +12,12 @@ from cosmosys.steps.base import Step, StepFactory
 class VersionUpdateStep(Step):
     """Step for updating the version number during the release process."""
 
-    def __init__(self, config: CosmosysConfig):
+    def __init__(self, config: CosmosysConfig) -> None:
         """
         Initialize the VersionUpdateStep.
 
         Args:
-            config: The Cosmosys configuration.
+            config (CosmosysConfig): The Cosmosys configuration.
         """
         super().__init__(config)
         self.old_version: Optional[str] = None
@@ -64,7 +64,9 @@ class VersionUpdateStep(Step):
 
         # No version specified; prompt the user
         self.log("No version specified; prompting the user.")
-        new_version = typer.prompt("Enter the new version", default=self.old_version)
+        new_version = typer.prompt(
+            "Enter the new version", default=self.old_version
+        )
         return new_version
 
     def _bump_version_part(self, part: str) -> Optional[str]:
@@ -82,7 +84,12 @@ class VersionUpdateStep(Step):
             self.log(f"Invalid version format: {self.old_version}")
             return None
 
-        major, minor, patch = map(int, parts)
+        try:
+            major, minor, patch = map(int, parts)
+        except ValueError:
+            self.log(f"Non-integer version parts in: {self.old_version}")
+            return None
+
         if part == "major":
             major += 1
             minor = 0
