@@ -41,6 +41,8 @@ class ProjectConfig(DataClassDictMixin):
 class ThemeConfig(DataClassDictMixin):
     """Theme configuration."""
 
+    name: str
+    description: str
     primary: str
     secondary: str
     success: str

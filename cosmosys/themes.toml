@@ -1,6 +1,8 @@
 # Cosmosys Themes Configuration
 
 [default]
+name = "Default"
+description = "The standard color scheme with vibrant primary colors."
 primary = "#00FFFF"  # Cyan
 secondary = "#FF00FF"  # Magenta
 success = "#00FF00"  # Green
@@ -10,6 +12,8 @@ info = "#0000FF"  # Blue
 emojis = { success = "✅", error = "❌", warning = "⚠️", info = "ℹ️" }
 
 [neon]
+name = "Neon"
+description = "Bright neon colors for a futuristic feel."
 primary = "#39FF14"  # Neon Green
 secondary = "#FF6EC7"  # Neon Pink
 success = "#0FFF50"  # Spring Green
@@ -19,15 +23,19 @@ info = "#00FFFF"  # Neon Cyan
 emojis = { success = "🚀", error = "💥", warning = "⚡", info = "💡" }
 
 [pastel]
-primary = "#AFE1FF"  # Light Blue
+name = "Pastel"
+description = "Soft pastel colors for a gentle look."
+primary = "#AFDCEC"  # Light Blue
 secondary = "#FFD1DC"  # Light Pink
 success = "#98FB98"  # Pale Green
 error = "#FFA07A"  # Light Salmon
 warning = "#FFFACD"  # Lemon Chiffon
-info = "#E6E6FA"  # Lavender
+info = "#D8BFD8"  # Thistle
 emojis = { success = "🌸", error = "🍂", warning = "🍋", info = "🌿" }
 
 [ocean]
+name = "Ocean"
+description = "Cool oceanic colors for a refreshing experience."
 primary = "#1E90FF"  # Dodger Blue
 secondary = "#20B2AA"  # Light Sea Green
 success = "#32CD32"  # Lime Green
@@ -37,42 +45,52 @@ info = "#87CEEB"  # Sky Blue
 emojis = { success = "🌊", error = "🦈", warning = "🐠", info = "🐳" }
 
 [sunset]
+name = "Sunset"
+description = "Warm hues inspired by a beautiful sunset."
 primary = "#FF6347"  # Tomato
 secondary = "#FF8C00"  # Dark Orange
-success = "#32CD32"  # Lime Green
+success = "#FFD700"  # Gold
 error = "#DC143C"  # Crimson
-warning = "#FFD700"  # Gold
-info = "#1E90FF"  # Dodger Blue
+warning = "#FFA500"  # Orange
+info = "#FF69B4"  # Hot Pink
 emojis = { success = "🌅", error = "🌋", warning = "🌞", info = "🌄" }
 
 [forest]
-primary = "#228B22"  # Forest Green
+name = "Forest"
+description = "Earthy tones reminiscent of a deep forest."
+primary = "#2E8B57"  # Sea Green
 secondary = "#8B4513"  # Saddle Brown
-success = "#6B8E23"  # Olive Drab
+success = "#9ACD32"  # Yellow Green
 error = "#A52A2A"  # Brown
 warning = "#DAA520"  # Goldenrod
-info = "#2E8B57"  # Sea Green
+info = "#66CDAA"  # Medium Aquamarine
 emojis = { success = "🌲", error = "🍄", warning = "🍁", info = "🌿" }
 
 [midnight]
+name = "Midnight"
+description = "Dark and mysterious shades of the night."
 primary = "#191970"  # Midnight Blue
-secondary = "#000000"  # Black
-success = "#2F4F4F"  # Dark Slate Gray
-error = "#8B0000"  # Dark Red
-warning = "#808000"  # Olive
+secondary = "#4B0082"  # Indigo
+success = "#4682B4"  # Steel Blue
+error = "#B22222"  # Firebrick
+warning = "#CD853F"  # Peru
 info = "#00008B"  # Dark Blue
 emojis = { success = "🌙", error = "🌑", warning = "🌓", info = "🌕" }
 
 [rose]
+name = "Rose"
+description = "Romantic shades of rose and pink."
 primary = "#FF007F"  # Rose
 secondary = "#C71585"  # Medium Violet Red
 success = "#FF69B4"  # Hot Pink
 error = "#DB7093"  # Pale Violet Red
-warning = "#FFC0CB"  # Pink
+warning = "#FFB6C1"  # Light Pink
 info = "#FF1493"  # Deep Pink
 emojis = { success = "🌹", error = "🥀", warning = "🌺", info = "🌷" }
 
 [sunrise]
+name = "Sunrise"
+description = "Bright and cheerful colors of a sunrise."
 primary = "#FF4500"  # Orange Red
 secondary = "#FFA500"  # Orange
 success = "#FFD700"  # Gold
@@ -82,15 +100,19 @@ info = "#FFE4B5"  # Moccasin
 emojis = { success = "🌄", error = "🌋", warning = "☀️", info = "🌅" }
 
 [grayscale]
-primary = "#333333"  # Dark Gray
-secondary = "#666666"  # Gray
-success = "#999999"  # Light Gray
-error = "#CCCCCC"  # Very Light Gray
-warning = "#777777"  # Medium Gray
+name = "Grayscale"
+description = "A monochrome palette of grays."
+primary = "#CCCCCC"  # Very Light Gray
+secondary = "#999999"  # Light Gray
+success = "#777777"  # Medium Gray
+error = "#555555"  # Dark Gray
+warning = "#888888"  # Gray
 info = "#BBBBBB"  # Silver
 emojis = { success = "◼️", error = "◻️", warning = "◾", info = "◽" }
 
 [galaxy]
+name = "Galaxy"
+description = "Cosmic colors inspired by the universe."
 primary = "#8A2BE2"  # Blue Violet
 secondary = "#4B0082"  # Indigo
 success = "#7FFF00"  # Chartreuse
@@ -100,10 +122,177 @@ info = "#00CED1"  # Dark Turquoise
 emojis = { success = "🌠", error = "🌟", warning = "💫", info = "🪐" }
 
 [witchcraft]
+name = "Witchcraft"
+description = "Mystical shades with a touch of magic."
 primary = "#800080"  # Purple
-secondary = "#000000"  # Black
-success = "#32CD32"  # Lime Green
-error = "#8B0000"  # Dark Red
+secondary = "#4B0082"  # Indigo
+success = "#ADFF2F"  # Green Yellow
+error = "#B22222"  # Firebrick
 warning = "#FFD700"  # Gold
 info = "#9400D3"  # Dark Violet
 emojis = { success = "🔮", error = "🕯️", warning = "🧙", info = "🧪" }
+
+[dracula]
+name = "Dracula"
+description = "A dark theme based on the Dracula color palette."
+primary = "#BD93F9"  # Purple
+secondary = "#FF79C6"  # Pink
+success = "#50FA7B"  # Green
+error = "#FF5555"  # Red
+warning = "#F1FA8C"  # Yellow
+info = "#8BE9FD"  # Cyan
+emojis = { success = "🧛", error = "🦇", warning = "🌙", info = "💀" }
+
+[catppuccin]
+name = "Catppuccin"
+description = "A warm pastel theme inspired by coffee and cats."
+primary = "#DDB6F2"  # Mauve
+secondary = "#F5E0DC"  # Flamingo
+success = "#ABE9B3"  # Green
+error = "#F28FAD"  # Red
+warning = "#FAE3B0"  # Yellow
+info = "#96CDFB"  # Sky
+emojis = { success = "🐈", error = "☕", warning = "🌸", info = "🌙" }
+
+[solarized_light]
+name = "Solarized Light"
+description = "A light theme based on the Solarized color palette."
+primary = "#268BD2"  # Blue
+secondary = "#2AA198"  # Cyan
+success = "#859900"  # Green
+error = "#DC322F"  # Red
+warning = "#B58900"  # Yellow
+info = "#6C71C4"  # Violet
+emojis = { success = "🌞", error = "🔥", warning = "⚠️", info = "💡" }
+
+[solarized_dark]
+name = "Solarized Dark"
+description = "A dark theme based on the Solarized color palette."
+primary = "#268BD2"  # Blue
+secondary = "#2AA198"  # Cyan
+success = "#859900"  # Green
+error = "#DC322F"  # Red
+warning = "#B58900"  # Yellow
+info = "#6C71C4"  # Violet
+emojis = { success = "🌜", error = "🔥", warning = "⚠️", info = "💡" }
+
+[monokai]
+name = "Monokai"
+description = "A vibrant theme with a distinctive color palette."
+primary = "#66D9EF"  # Blue
+secondary = "#F92672"  # Pink
+success = "#A6E22E"  # Green
+error = "#F92672"  # Red
+warning = "#FD971F"  # Orange
+info = "#AE81FF"  # Purple
+emojis = { success = "🌵", error = "🔥", warning = "🌞", info = "🎨" }
+
+[cyberpunk]
+name = "Cyberpunk"
+description = "Futuristic neon colors inspired by cyberpunk."
+primary = "#FF00FF"  # Magenta
+secondary = "#00FFFF"  # Cyan
+success = "#00FF00"  # Green
+error = "#FF0000"  # Red
+warning = "#FFFF00"  # Yellow
+info = "#00FFFF"  # Cyan
+emojis = { success = "🤖", error = "💥", warning = "⚠️", info = "🌐" }
+
+[retro]
+name = "Retro"
+description = "Vintage colors inspired by 80s and 90s design."
+primary = "#FF6F61"  # Coral
+secondary = "#6B5B95"  # Purple
+success = "#88B04B"  # Green
+error = "#D65076"  # Raspberry
+warning = "#FFA500"  # Orange
+info = "#92A8D1"  # Light Blue
+emojis = { success = "📼", error = "📺", warning = "💾", info = "🕹️" }
+
+[candy]
+name = "Candy"
+description = "Sweet and bright colors like candy."
+primary = "#FF69B4"  # Hot Pink
+secondary = "#FFD700"  # Gold
+success = "#ADFF2F"  # Green Yellow
+error = "#FF1493"  # Deep Pink
+warning = "#FF8C00"  # Dark Orange
+info = "#1E90FF"  # Dodger Blue
+emojis = { success = "🍬", error = "🍭", warning = "🍰", info = "🍡" }
+
+[steampunk]
+name = "Steampunk"
+description = "Earthy and metallic tones with a vintage feel."
+primary = "#B7410E"  # Rust
+secondary = "#8B4513"  # Saddle Brown
+success = "#CD853F"  # Peru
+error = "#A0522D"  # Sienna
+warning = "#DAA520"  # Goldenrod
+info = "#D2B48C"  # Tan
+emojis = { success = "⚙️", error = "🛠️", warning = "🕰️", info = "🔍" }
+
+[vintage]
+name = "Vintage"
+description = "Faded colors for a classic vintage look."
+primary = "#C0C0C0"  # Silver
+secondary = "#808080"  # Gray
+success = "#6B8E23"  # Olive Drab
+error = "#800000"  # Maroon
+warning = "#B8860B"  # Dark Goldenrod
+info = "#4682B4"  # Steel Blue
+emojis = { success = "📻", error = "📽️", warning = "🎞️", info = "🕰️" }
+
+[minimalist]
+name = "Minimalist"
+description = "Simple shades of gray for a minimalist look."
+primary = "#CCCCCC"  # Very Light Gray
+secondary = "#FFFFFF"  # White
+success = "#999999"  # Light Gray
+error = "#666666"  # Gray
+warning = "#333333"  # Dark Gray
+info = "#555555"  # Medium Gray
+emojis = { success = "✔️", error = "✖️", warning = "⚠️", info = "ℹ️" }
+
+[rainbow]
+name = "Rainbow"
+description = "A vibrant rainbow of colors."
+primary = "#FF0000"  # Red
+secondary = "#FF7F00"  # Orange
+success = "#FFFF00"  # Yellow
+error = "#00FF00"  # Green
+warning = "#0000FF"  # Blue
+info = "#4B0082"  # Indigo
+emojis = { success = "🌈", error = "🎉", warning = "💥", info = "✨" }
+
+[metallic]
+name = "Metallic"
+description = "Shiny metallic shades."
+primary = "#C0C0C0"  # Silver
+secondary = "#FFD700"  # Gold
+success = "#E5E4E2"  # Platinum
+error = "#B87333"  # Copper
+warning = "#DAA520"  # Goldenrod
+info = "#D4AF37"  # Antique Gold
+emojis = { success = "🔩", error = "⚙️", warning = "🛠️", info = "💎" }
+
+[nature]
+name = "Nature"
+description = "Fresh colors inspired by nature."
+primary = "#6B8E23"  # Olive Drab
+secondary = "#228B22"  # Forest Green
+success = "#66CDAA"  # Medium Aquamarine
+error = "#8B0000"  # Dark Red
+warning = "#FFD700"  # Gold
+info = "#32CD32"  # Lime Green
+emojis = { success = "🌳", error = "🔥", warning = "🌪️", info = "🌦️" }
+
+[space]
+name = "Space"
+description = "Deep colors inspired by outer space."
+primary = "#1E90FF"  # Dodger Blue
+secondary = "#4B0082"  # Indigo
+success = "#00FA9A"  # Medium Spring Green
+error = "#FF4500"  # Orange Red
+warning = "#DAA520"  # Goldenrod
+info = "#9370DB"  # Medium Purple
+emojis = { success = "🚀", error = "🌑", warning = "☄️", info = "🪐" }
