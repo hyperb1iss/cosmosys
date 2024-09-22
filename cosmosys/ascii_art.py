@@ -51,7 +51,7 @@ class ASCIIArt:
         for _ in range(height):
             for _ in range(width):
                 if random.random() < density:
-                    stars += random.choice([".", "*", "+", "·"])
+                    stars += random.choice([".", "*", "+", "·", "✦", "✧", "☆", "★"])
                 else:
                     stars += " "
             stars += "\n"
@@ -59,7 +59,7 @@ class ASCIIArt:
 
 
 DEFAULT_LOGO = [
-    " ▄▄·       .▄▄ · • ▌ ▄ ·.       .▄▄ ·  ▄· ▄▌.▄▄ · ",
+    " ▄▄·       .▄▄ · • ▌ ▄ ·.       .▄▄ ·  ▄· ▄▌.▄▄ ·  ",
     "▐█ ▌▪▪     ▐█ ▀. ·██ ▐███▪▪     ▐█ ▀. ▐█▪██▌▐█ ▀.  ",
     "█ ▄▄ ▄█▀▄ ▄▀▀▀█▄▐█ ▌▐▌▐█· ▄█▀▄ ▄▀▀▀█▄▐█▌▐█▪▄▀▀▀█▄  ",
     "▐███▌▐█▌.▐▌▐█▄▪▐███ ██▌▐█▌▐█▌.▐▌▐█▄▪▐█ ▐█▀·.▐█▄▪▐█ ",
