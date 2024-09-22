@@ -29,9 +29,10 @@ def test_valid_config():
             "version": "1.0.0",
             "project_type": "python",
         },
-        "color_scheme": "default",
+        "theme": "default",
         "release": {"steps": ["version_update", "git_commit"]},
         "features": {"changelog": True},
+        "git": {"files_to_commit": ["*"], "commit_message": "Release {version}"},
     }
     config = CosmosysConfig.from_dict(config_data)
     assert config.project.name == "TestProject"
@@ -93,9 +94,13 @@ def test_save_and_load_config(temp_dir):
         project=ProjectConfig(
             name="TestProject", repo_name="test/repo", version="1.0.0", project_type="python"
         ),
-        color_scheme="default",
+        theme="default",
         release=ReleaseConfig(steps=["version_update", "git_commit"]),
         features={"changelog": True},
+        git={
+            "files_to_commit": ["file1.py", "file2.py"],
+            "commit_message": "Release {version}",
+        },
     )
     config.save()
     loaded_config = load_config()
@@ -108,6 +113,11 @@ def test_get_and_set_config_values():
         project=ProjectConfig(
             name="TestProject", repo_name="test/repo", version="1.0.0", project_type="python"
         ),
+        release=ReleaseConfig(steps=["version_update"]),
+        git={
+            "files_to_commit": ["file1.py"],
+            "commit_message": "Release {version}",
+        },
     )
     config.set("features.new_feature", True)
     assert config.get("features.new_feature")
@@ -145,5 +155,5 @@ def test_cli_config_view(temp_dir):
     runner.invoke(cli_app, ["config", "--init"])
     result = runner.invoke(cli_app, ["config"])
     assert result.exit_code == 0
-    assert "Current configuration:" in result.output
+    assert "Current Configuration" in result.output
     assert "project" in result.output

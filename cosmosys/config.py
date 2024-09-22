@@ -123,6 +123,11 @@ class CosmosysConfig(DataClassDictMixin):
                 project_type=project_type,
             ),
             release=ReleaseConfig(steps=cls.get_default_steps(project_type)),
+            git={
+                "files_to_commit": ["*"],
+                "commit_message": "Release {version}",
+                "push_tags": True,
+            },
             is_auto_detected=True,
         )
 

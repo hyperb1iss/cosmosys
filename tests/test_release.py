@@ -1,15 +1,11 @@
 # pylint: disable=redefined-outer-name
 """Unit tests for the Cosmosys release process."""
 
-import logging
-from io import StringIO
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typer.testing import CliRunner
 
-from cosmosys.cli import app
-from cosmosys.config import ThemeConfig, CosmosysConfig, ProjectConfig, ReleaseConfig
+from cosmosys.config import CosmosysConfig, ProjectConfig, ReleaseConfig, ThemeConfig
 from cosmosys.steps.base import StepFactory
 from cosmosys.steps.git_commit import GitCommitStep
 from cosmosys.steps.version_update import VersionUpdateStep
@@ -22,25 +18,33 @@ def mock_config() -> CosmosysConfig:
         project=ProjectConfig(
             name="TestProject", repo_name="test/repo", version="1.0.0", project_type="python"
         ),
-        color_scheme="default",
-        custom_color_schemes={
+        theme="default",
+        custom_themes={
             "custom": ThemeConfig(
-                primary="blue",
-                secondary="green",
-                success="cyan",
-                error="red",
-                warning="yellow",
-                info="magenta",
+                name="Custom Theme",
+                description="A custom theme for testing",
+                primary="#0000FF",  # Blue
+                secondary="#008000",  # Green
+                success="#00FFFF",  # Cyan
+                error="#FF0000",  # Red
+                warning="#FFFF00",  # Yellow
+                info="#FF00FF",  # Magenta
+                emojis={"success": "✅", "error": "❌", "warning": "⚠️", "info": "ℹ️"},
             )
         },
-        release=ReleaseConfig(steps=[]),  # Empty list to use default steps
+        release=ReleaseConfig(steps=["version_update", "git_commit"]),  # Provide steps
         features={"changelog": True},
-        git={},
+        git={
+            "files_to_commit": ["file1.py"],
+            "commit_message": "Release {version}",
+        },
     )
 
 
 def test_version_update_step(mock_config: CosmosysConfig) -> None:
     """Test the version update step."""
+    # Set new_version to avoid prompting
+    mock_config.new_version = "1.0.1"
     step = VersionUpdateStep(mock_config)
 
     with patch.object(step, "_update_version_in_files"):
@@ -86,55 +90,3 @@ def test_step_factory(mock_config: CosmosysConfig) -> None:
 
     with pytest.raises(ValueError):
         StepFactory.create("unknown_step", mock_config)
-
-    @patch("typer.echo")
-    @patch.object(StepFactory, "create")
-    def test_release_process(
-        mock_create_step: MagicMock, mock_echo: MagicMock, mock_config: CosmosysConfig
-    ) -> None:
-        """Test the release process."""
-        # Capture debug logs
-        log_capture = StringIO()
-        handler = logging.StreamHandler(log_capture)
-        logger = logging.getLogger()
-        logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG)
-
-        # Get the actual steps that will be executed
-        actual_steps = mock_config.get_steps()
-        print(f"Actual steps: {actual_steps}")
-
-        # Create mock steps for all expected steps
-        mock_steps = [MagicMock() for _ in range(len(actual_steps))]
-        for step in mock_steps:
-            step.execute.return_value = True  # Ensure all steps "succeed"
-        mock_create_step.side_effect = mock_steps
-
-        runner = CliRunner()
-        result = runner.invoke(app, ["release"], obj=mock_config)
-
-        print(f"Exit code: {result.exit_code}")
-        print(f"Output: {result.output}")
-        print(f"Exception: {result.exception}")
-        print(f"Debug logs: {log_capture.getvalue()}")
-
-        assert result.exit_code == 0
-        assert mock_create_step.call_count == len(
-            actual_steps
-        ), f"Expected {len(actual_steps)} steps, but {mock_create_step.call_count} were created"
-        assert "Release process completed" in result.output
-
-        # Verify that each step was "executed"
-        for step in mock_steps:
-            assert step.execute.called
-
-        # Verify that success messages were echoed for each step
-        success_calls = [
-            call for call in mock_echo.call_args_list if "completed successfully" in str(call)
-        ]
-        assert len(success_calls) == len(
-            actual_steps
-        ), f"Expected {len(actual_steps)} success messages, but got {len(success_calls)}"
-
-        # Remove the log handler to avoid affecting other tests
-        logger.removeHandler(handler)

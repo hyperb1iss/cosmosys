@@ -6,6 +6,7 @@ from typing import Dict, List
 
 import toml
 from mashumaro import DataClassDictMixin
+from rich.color import Color
 from rich.console import Console
 from rich.panel import Panel
 from rich.style import Style
@@ -27,8 +28,10 @@ class ThemeManager(DataClassDictMixin):
     def __post_init__(self) -> None:
         """Initialize themes and set the current theme."""
         self.themes = self.load_themes()
+        # Include custom themes from config
+        self.themes.update(self.config.custom_themes)
         self.current_theme = self.get_theme(self.config.theme)
-        self.emojis = self.themes[self.config.theme].emojis
+        self.emojis = self.current_theme.emojis
 
     @staticmethod
     def load_themes() -> Dict[str, ThemeConfig]:
@@ -97,9 +100,8 @@ class ThemeManager(DataClassDictMixin):
         end_rgb = self._hex_to_rgb(end_color_hex)
         gradient_text = Text()
         length = max(wcswidth(text) - 1, 1)
-        for char in text:
-            char_width = wcswidth(char)
-            ratio = char_width / length
+        for index, char in enumerate(text):
+            ratio = index / length
             r = int(start_rgb[0] + (end_rgb[0] - start_rgb[0]) * ratio)
             g = int(start_rgb[1] + (end_rgb[1] - start_rgb[1]) * ratio)
             b = int(start_rgb[2] + (end_rgb[2] - start_rgb[2]) * ratio)
@@ -112,6 +114,13 @@ class ThemeManager(DataClassDictMixin):
         """Convert hex color code to RGB values."""
         hex_color = hex_color.lstrip("#")
         return [int(hex_color[i : i + 2], 16) for i in (0, 2, 4)]
+
+    @staticmethod
+    def _color_to_hex(color: Color) -> str:
+        """Convert Rich Color object to a hex string."""
+        if color is None:
+            return "#FFFFFF"  # Default to white if no color is set
+        return f"#{color.triplet.red:02X}{color.triplet.green:02X}{color.triplet.blue:02X}".lower()
 
     def apply_style(self, text: str, style_name: str) -> Text:
         """Apply a predefined style to the text."""

@@ -3,7 +3,8 @@
 from unittest.mock import patch
 
 import pytest
-from cosmosys.config import CosmosysConfig, ProjectConfig
+
+from cosmosys.config import CosmosysConfig, ProjectConfig, ReleaseConfig
 from cosmosys.steps.version_update import VersionUpdateStep
 
 
@@ -16,7 +17,12 @@ def mock_config():
             repo_name="test/repo",
             version="1.2.3",
             project_type="python",
-        )
+        ),
+        release=ReleaseConfig(steps=["version_update"]),
+        git={
+            "files_to_commit": ["file1.py"],
+            "commit_message": "Release {version}",
+        },
     )
 
 
