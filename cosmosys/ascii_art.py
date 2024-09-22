@@ -69,6 +69,7 @@ DEFAULT_LOGO = [
     "     .:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:.      ",
 ]
 
+
 class ASCIIArtManager:
     """Manages multiple ASCII art pieces and provides rendering options."""
 

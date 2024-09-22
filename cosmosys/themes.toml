@@ -1,0 +1,109 @@
+# Cosmosys Themes Configuration
+
+[default]
+primary = "#00FFFF"  # Cyan
+secondary = "#FF00FF"  # Magenta
+success = "#00FF00"  # Green
+error = "#FF0000"  # Red
+warning = "#FFFF00"  # Yellow
+info = "#0000FF"  # Blue
+emojis = { success = "✅", error = "❌", warning = "⚠️", info = "ℹ️" }
+
+[neon]
+primary = "#39FF14"  # Neon Green
+secondary = "#FF6EC7"  # Neon Pink
+success = "#0FFF50"  # Spring Green
+error = "#FF073A"  # Neon Red
+warning = "#FFD300"  # Neon Yellow
+info = "#00FFFF"  # Neon Cyan
+emojis = { success = "🚀", error = "💥", warning = "⚡", info = "💡" }
+
+[pastel]
+primary = "#AFE1FF"  # Light Blue
+secondary = "#FFD1DC"  # Light Pink
+success = "#98FB98"  # Pale Green
+error = "#FFA07A"  # Light Salmon
+warning = "#FFFACD"  # Lemon Chiffon
+info = "#E6E6FA"  # Lavender
+emojis = { success = "🌸", error = "🍂", warning = "🍋", info = "🌿" }
+
+[ocean]
+primary = "#1E90FF"  # Dodger Blue
+secondary = "#20B2AA"  # Light Sea Green
+success = "#32CD32"  # Lime Green
+error = "#FF4500"  # Orange Red
+warning = "#FFD700"  # Gold
+info = "#87CEEB"  # Sky Blue
+emojis = { success = "🌊", error = "🦈", warning = "🐠", info = "🐳" }
+
+[sunset]
+primary = "#FF6347"  # Tomato
+secondary = "#FF8C00"  # Dark Orange
+success = "#32CD32"  # Lime Green
+error = "#DC143C"  # Crimson
+warning = "#FFD700"  # Gold
+info = "#1E90FF"  # Dodger Blue
+emojis = { success = "🌅", error = "🌋", warning = "🌞", info = "🌄" }
+
+[forest]
+primary = "#228B22"  # Forest Green
+secondary = "#8B4513"  # Saddle Brown
+success = "#6B8E23"  # Olive Drab
+error = "#A52A2A"  # Brown
+warning = "#DAA520"  # Goldenrod
+info = "#2E8B57"  # Sea Green
+emojis = { success = "🌲", error = "🍄", warning = "🍁", info = "🌿" }
+
+[midnight]
+primary = "#191970"  # Midnight Blue
+secondary = "#000000"  # Black
+success = "#2F4F4F"  # Dark Slate Gray
+error = "#8B0000"  # Dark Red
+warning = "#808000"  # Olive
+info = "#00008B"  # Dark Blue
+emojis = { success = "🌙", error = "🌑", warning = "🌓", info = "🌕" }
+
+[rose]
+primary = "#FF007F"  # Rose
+secondary = "#C71585"  # Medium Violet Red
+success = "#FF69B4"  # Hot Pink
+error = "#DB7093"  # Pale Violet Red
+warning = "#FFC0CB"  # Pink
+info = "#FF1493"  # Deep Pink
+emojis = { success = "🌹", error = "🥀", warning = "🌺", info = "🌷" }
+
+[sunrise]
+primary = "#FF4500"  # Orange Red
+secondary = "#FFA500"  # Orange
+success = "#FFD700"  # Gold
+error = "#FF69B4"  # Hot Pink
+warning = "#FFFF00"  # Yellow
+info = "#FFE4B5"  # Moccasin
+emojis = { success = "🌄", error = "🌋", warning = "☀️", info = "🌅" }
+
+[grayscale]
+primary = "#333333"  # Dark Gray
+secondary = "#666666"  # Gray
+success = "#999999"  # Light Gray
+error = "#CCCCCC"  # Very Light Gray
+warning = "#777777"  # Medium Gray
+info = "#BBBBBB"  # Silver
+emojis = { success = "◼️", error = "◻️", warning = "◾", info = "◽" }
+
+[galaxy]
+primary = "#8A2BE2"  # Blue Violet
+secondary = "#4B0082"  # Indigo
+success = "#7FFF00"  # Chartreuse
+error = "#FF4500"  # Orange Red
+warning = "#FFD700"  # Gold
+info = "#00CED1"  # Dark Turquoise
+emojis = { success = "🌠", error = "🌟", warning = "💫", info = "🪐" }
+
+[witchcraft]
+primary = "#800080"  # Purple
+secondary = "#000000"  # Black
+success = "#32CD32"  # Lime Green
+error = "#8B0000"  # Dark Red
+warning = "#FFD700"  # Gold
+info = "#9400D3"  # Dark Violet
+emojis = { success = "🔮", error = "🕯️", warning = "🧙", info = "🧪" }

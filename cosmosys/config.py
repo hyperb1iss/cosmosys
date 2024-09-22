@@ -11,6 +11,10 @@ from mashumaro import DataClassDictMixin
 DEFAULT_CONFIG_FILE = "cosmosys.toml"
 
 
+class ConfigurationError(Exception):
+    """Exception raised for configuration errors."""
+
+
 @dataclass
 class ProjectConfig(DataClassDictMixin):
     """Configuration for the project details."""
@@ -20,6 +24,17 @@ class ProjectConfig(DataClassDictMixin):
     version: str
     project_type: str
     issue_tracker: Optional[str] = None
+
+    def __post_init__(self):
+        """Validate project configuration."""
+        if not self.name:
+            raise ConfigurationError("Project name is required")
+        if not self.repo_name:
+            raise ConfigurationError("Repository name is required")
+        if not self.version:
+            raise ConfigurationError("Project version is required")
+        if self.project_type not in ["python", "rust", "node", "unknown"]:
+            raise ConfigurationError(f"Invalid project type: {self.project_type}")
 
 
 @dataclass
@@ -32,6 +47,25 @@ class ColorScheme(DataClassDictMixin):
     error: str
     warning: str
     info: str
+    emojis: Dict[str, str] = field(default_factory=dict)
+
+    def __post_init__(self):
+        """Validate color scheme configuration."""
+        for color in [
+            self.primary,
+            self.secondary,
+            self.success,
+            self.error,
+            self.warning,
+            self.info,
+        ]:
+            if not color.startswith("#") or len(color) != 7:
+                raise ConfigurationError(f"Invalid color format: {color}. Use #RRGGBB format.")
+
+        required_emojis = ["success", "error", "warning", "info"]
+        for emoji in required_emojis:
+            if emoji not in self.emojis:
+                raise ConfigurationError(f"Missing emoji for {emoji}")
 
 
 @dataclass
@@ -39,6 +73,11 @@ class ReleaseConfig(DataClassDictMixin):
     """Configuration for the release process."""
 
     steps: List[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        """Validate release configuration."""
+        if not self.steps:
+            raise ConfigurationError("At least one release step is required")
 
 
 @dataclass
@@ -55,23 +94,15 @@ class CosmosysConfig(DataClassDictMixin):
 
     @classmethod
     def from_file(cls, config_file: str) -> "CosmosysConfig":
-        """
-        Load configuration from a file.
-
-        Args:
-            config_file (str): Path to the configuration file.
-
-        Returns:
-            CosmosysConfig: Loaded configuration object.
-        """
+        """Load configuration from a file."""
         try:
             with open(config_file, "r", encoding="utf-8") as f:
                 config_data = toml.load(f)
             return cls.from_dict(config_data)
         except FileNotFoundError:
-            return cls.auto_detect_config()
-        except toml.TomlDecodeError:
-            return cls.auto_detect_config()
+            raise ConfigurationError(f"Configuration file not found: {config_file}")
+        except toml.TomlDecodeError as e:
+            raise ConfigurationError(f"Invalid TOML in configuration file: {str(e)}")
 
     @classmethod
     def auto_detect_config(cls, base_path: Optional[str] = None) -> "CosmosysConfig":
@@ -88,7 +119,7 @@ class CosmosysConfig(DataClassDictMixin):
                 project_type=project_type,
             ),
             release=ReleaseConfig(steps=cls.get_default_steps(project_type)),
-            is_auto_detected=True
+            is_auto_detected=True,
         )
 
     @staticmethod
@@ -101,50 +132,33 @@ class CosmosysConfig(DataClassDictMixin):
             return "rust"
         if os.path.exists(os.path.join(base_path, "package.json")):
             return "node"
-        if os.path.exists(os.path.join(base_path, "setup.py")):
-            return "python-setuptools"
         return "unknown"
 
     @staticmethod
     def detect_version(project_type: str, base_path: Optional[str] = None) -> str:
         """Detect the current version based on the project type."""
         base_path = base_path or os.getcwd()
-        if project_type == "python":
-            try:
+        version = "0.1.0"  # Default version
+
+        try:
+            if project_type == "python":
                 with open(os.path.join(base_path, "pyproject.toml"), "r", encoding="utf-8") as f:
                     pyproject = toml.load(f)
-                return pyproject.get("tool", {}).get("poetry", {}).get("version") or pyproject.get(
-                    "project", {}
-                ).get("version", "0.1.0")
-            except FileNotFoundError:
-                print("Warning: pyproject.toml not found. Defaulting to version 0.1.0")
-                return "0.1.0"
-            except toml.TomlDecodeError:
-                print("Warning: Invalid TOML in pyproject.toml. Defaulting to version 0.1.0")
-                return "0.1.0"
-        elif project_type == "rust":
-            try:
+                version = pyproject.get("tool", {}).get("poetry", {}).get(
+                    "version"
+                ) or pyproject.get("project", {}).get("version", version)
+            elif project_type == "rust":
                 with open(os.path.join(base_path, "Cargo.toml"), "r", encoding="utf-8") as f:
                     cargo_toml = toml.load(f)
-                return cargo_toml.get("package", {}).get("version", "0.1.0")
-            except FileNotFoundError:
-                print("Warning: Cargo.toml not found. Defaulting to version 0.1.0")
-                return "0.1.0"
-            except toml.TomlDecodeError:
-                print("Warning: Invalid TOML in Cargo.toml. Defaulting to version 0.1.0")
-                return "0.1.0"
-        elif project_type == "node":
-            try:
+                version = cargo_toml.get("package", {}).get("version", version)
+            elif project_type == "node":
                 with open(os.path.join(base_path, "package.json"), "r", encoding="utf-8") as f:
                     package_json = json.load(f)
-                return package_json.get("version", "0.1.0")
-            except FileNotFoundError:
-                print("Warning: package.json not found. Defaulting to version 0.1.0")
-                return "0.1.0"
-            except json.JSONDecodeError:
-                print("Warning: Invalid JSON in package.json. Defaulting to version 0.1.0")
-                return "0.1.0"
-        return "0.1.0"
+                version = package_json.get("version", version)
+        except (FileNotFoundError, json.JSONDecodeError, toml.TomlDecodeError) as e:
+            print(f"Warning: Error detecting version: {str(e)}. Using default version {version}")
+
+        return version
 
     @staticmethod
     def get_default_steps(project_type: str) -> List[str]:
@@ -159,26 +173,15 @@ class CosmosysConfig(DataClassDictMixin):
         return common_steps
 
     def save(self, config_file: str = DEFAULT_CONFIG_FILE) -> None:
-        """
-        Save the configuration to a file.
-
-        Args:
-            config_file (str): Path to save the configuration file.
-        """
-        with open(config_file, "w", encoding="utf-8") as f:
-            toml.dump(self.to_dict(), f)
+        """Save the configuration to a file."""
+        try:
+            with open(config_file, "w", encoding="utf-8") as f:
+                toml.dump(self.to_dict(), f)
+        except IOError as e:
+            raise ConfigurationError(f"Error saving configuration file: {str(e)}")
 
     def get(self, key: str, default: Any = None) -> Any:
-        """
-        Get a configuration value by key.
-
-        Args:
-            key (str): The configuration key, using dot notation for nested keys.
-            default (Any, optional): The default value to return if the key is not found.
-
-        Returns:
-            Any: The configuration value if found, otherwise the default value.
-        """
+        """Get a configuration value by key."""
         keys = key.split(".")
         value: Any = self.to_dict()
         for k in keys:
@@ -191,28 +194,20 @@ class CosmosysConfig(DataClassDictMixin):
         return value
 
     def set(self, key: str, value: Any) -> None:
-        """
-        Set a configuration value by key.
-
-        Args:
-            key (str): The configuration key, using dot notation for nested keys.
-            value (Any): The value to set.
-        """
+        """Set a configuration value by key."""
         keys = key.split(".")
         config_dict = self.to_dict()
         current = config_dict
         for k in keys[:-1]:
             current = current.setdefault(k, {})
         current[keys[-1]] = value
-        self.__dict__.update(self.from_dict(config_dict).__dict__)
+        try:
+            self.__dict__.update(self.from_dict(config_dict).__dict__)
+        except ValueError as e:
+            raise ConfigurationError(f"Invalid configuration value: {str(e)}")
 
     def get_steps(self) -> List[str]:
-        """
-        Get the list of release steps.
-
-        Returns:
-            List[str]: The list of release steps.
-        """
+        """Get the list of release steps."""
         if self.release.steps:
             return self.release.steps
         return self.get_default_steps(self.project.project_type)
@@ -222,12 +217,7 @@ class CosmosysConfig(DataClassDictMixin):
         return self.features.get(feature, False)
 
     def to_flat_dict(self) -> Dict[str, Any]:
-        """
-        Convert the configuration to a flat dictionary.
-
-        Returns:
-            Dict[str, Any]: A flat dictionary representation of the configuration.
-        """
+        """Convert the configuration to a flat dictionary."""
         flat_dict = {}
 
         def recurse(prefix: str, obj: Any):
@@ -240,15 +230,44 @@ class CosmosysConfig(DataClassDictMixin):
         recurse("", self.to_dict())
         return flat_dict
 
+    def validate(self) -> None:
+        """Validate the entire configuration."""
+        # Validate project config
+        self.project.__post_init__()
+
+        # Validate color schemes
+        for scheme_name, scheme in self.custom_color_schemes.items():
+            try:
+                scheme.__post_init__()
+            except ConfigurationError as e:
+                raise ConfigurationError(f"Invalid color scheme '{scheme_name}': {str(e)}")
+
+        # Validate release config
+        self.release.__post_init__()
+
+        # Validate features
+        for feature, enabled in self.features.items():
+            if not isinstance(enabled, bool):
+                raise ConfigurationError(
+                    f"Invalid feature configuration for '{feature}': must be a boolean"
+                )
+
+        # Validate git configuration
+        required_git_keys = ["files_to_commit", "commit_message"]
+        for key in required_git_keys:
+            if key not in self.git:
+                raise ConfigurationError(f"Missing required git configuration: '{key}'")
+
+        print("Configuration validation successful.")
+
 
 def load_config(config_file: str = DEFAULT_CONFIG_FILE) -> CosmosysConfig:
-    """
-    Load the configuration from a file.
-
-    Args:
-        config_file (str): Path to the configuration file.
-
-    Returns:
-        CosmosysConfig: The loaded or auto-detected configuration object.
-    """
-    return CosmosysConfig.from_file(config_file)
+    """Load the configuration from a file."""
+    try:
+        config = CosmosysConfig.from_file(config_file)
+        config.validate()
+        return config
+    except ConfigurationError as e:
+        print(f"Error loading configuration: {str(e)}")
+        print("Falling back to auto-detected configuration.")
+        return CosmosysConfig.auto_detect_config()
