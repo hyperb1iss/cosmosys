@@ -9,7 +9,7 @@ import pytest
 from typer.testing import CliRunner
 
 from cosmosys.cli import app
-from cosmosys.config import ColorScheme, CosmosysConfig, ProjectConfig, ReleaseConfig
+from cosmosys.config import ThemeConfig, CosmosysConfig, ProjectConfig, ReleaseConfig
 from cosmosys.steps.base import StepFactory
 from cosmosys.steps.git_commit import GitCommitStep
 from cosmosys.steps.version_update import VersionUpdateStep
@@ -24,7 +24,7 @@ def mock_config() -> CosmosysConfig:
         ),
         color_scheme="default",
         custom_color_schemes={
-            "custom": ColorScheme(
+            "custom": ThemeConfig(
                 primary="blue",
                 secondary="green",
                 success="cyan",

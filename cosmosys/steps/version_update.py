@@ -2,6 +2,8 @@
 
 from typing import Optional
 
+import typer
+
 from cosmosys.config import CosmosysConfig
 from cosmosys.steps.base import Step, StepFactory
 
@@ -54,13 +56,49 @@ class VersionUpdateStep(Step):
         Returns:
             Optional[str]: The new version number, or None if it couldn't be determined.
         """
-        if self.old_version:
-            parts = self.old_version.split(".")
-            if len(parts) == 3:
-                parts[2] = str(int(parts[2]) + 1)
-                return ".".join(parts)
-        return None
+        if self.config.new_version:
+            return self.config.new_version
+
+        if self.config.version_part:
+            return self._bump_version_part(self.config.version_part)
+
+        # No version specified; prompt the user
+        self.log("No version specified; prompting the user.")
+        new_version = typer.prompt("Enter the new version", default=self.old_version)
+        return new_version
+
+    def _bump_version_part(self, part: str) -> Optional[str]:
+        """
+        Bump the specified part of the version.
+
+        Args:
+            part (str): The part to bump ('major', 'minor', 'patch').
+
+        Returns:
+            Optional[str]: The new version number.
+        """
+        parts = self.old_version.split(".")
+        if len(parts) != 3:
+            self.log(f"Invalid version format: {self.old_version}")
+            return None
+
+        major, minor, patch = map(int, parts)
+        if part == "major":
+            major += 1
+            minor = 0
+            patch = 0
+        elif part == "minor":
+            minor += 1
+            patch = 0
+        elif part == "patch":
+            patch += 1
+        else:
+            self.log(f"Invalid part specified: {part}")
+            return None
+
+        return f"{major}.{minor}.{patch}"
 
     def _update_version_in_files(self) -> None:
         """Update the version number in project files."""
         # TODO: Implement updating version in project files
+        pass

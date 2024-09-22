@@ -4,8 +4,8 @@
 import pytest
 from colorama import Fore, Style
 
-from cosmosys.color_schemes import ColorManager
-from cosmosys.config import ColorScheme, CosmosysConfig, ProjectConfig
+from cosmosys.theme import ThemeManager
+from cosmosys.config import ThemeConfig, CosmosysConfig, ProjectConfig
 
 
 @pytest.fixture
@@ -28,7 +28,7 @@ def custom_config() -> CosmosysConfig:
         ),
         color_scheme="custom",
         custom_color_schemes={
-            "custom": ColorScheme(
+            "custom": ThemeConfig(
                 primary="blue",
                 secondary="green",
                 success="cyan",
@@ -42,36 +42,36 @@ def custom_config() -> CosmosysConfig:
 
 def test_default_color_scheme(default_config: CosmosysConfig) -> None:
     """Test the default color scheme."""
-    color_manager = ColorManager(default_config)
-    assert color_manager.current_scheme == ColorManager.DEFAULT_SCHEME
+    theme_manager = ThemeManager(default_config)
+    assert theme_manager.current_scheme == ThemeManager.DEFAULT_SCHEME
 
 
 def test_custom_color_scheme(custom_config: CosmosysConfig) -> None:
     """Test a custom color scheme."""
-    color_manager = ColorManager(custom_config)
-    assert color_manager.current_scheme == custom_config.custom_color_schemes["custom"]
+    theme_manager = ThemeManager(custom_config)
+    assert theme_manager.current_scheme == custom_config.custom_color_schemes["custom"]
 
 
 def test_colorize(default_config: CosmosysConfig) -> None:
     """Test the colorize method."""
-    color_manager = ColorManager(default_config)
-    colored_text = color_manager.primary("Test")
+    theme_manager = ThemeManager(default_config)
+    colored_text = theme_manager.primary("Test")
     assert colored_text == f"{Fore.CYAN}Test{Style.RESET_ALL}"
 
 
 def test_set_scheme(default_config: CosmosysConfig) -> None:
     """Test setting a different color scheme."""
-    color_manager = ColorManager(default_config)
-    color_manager.set_scheme("monochrome")
-    assert color_manager.current_scheme == color_manager.color_schemes["monochrome"]
+    theme_manager = ThemeManager(default_config)
+    theme_manager.set_scheme("monochrome")
+    assert theme_manager.current_scheme == theme_manager.color_schemes["monochrome"]
 
 
 def test_color_methods(default_config: CosmosysConfig) -> None:
     """Test all color methods."""
-    color_manager = ColorManager(default_config)
-    assert color_manager.primary("Test") == f"{Fore.CYAN}Test{Style.RESET_ALL}"
-    assert color_manager.secondary("Test") == f"{Fore.MAGENTA}Test{Style.RESET_ALL}"
-    assert color_manager.success("Test") == f"{Fore.GREEN}Test{Style.RESET_ALL}"
-    assert color_manager.error("Test") == f"{Fore.RED}Test{Style.RESET_ALL}"
-    assert color_manager.warning("Test") == f"{Fore.YELLOW}Test{Style.RESET_ALL}"
-    assert color_manager.info("Test") == f"{Fore.BLUE}Test{Style.RESET_ALL}"
+    theme_manager = ThemeManager(default_config)
+    assert theme_manager.primary("Test") == f"{Fore.CYAN}Test{Style.RESET_ALL}"
+    assert theme_manager.secondary("Test") == f"{Fore.MAGENTA}Test{Style.RESET_ALL}"
+    assert theme_manager.success("Test") == f"{Fore.GREEN}Test{Style.RESET_ALL}"
+    assert theme_manager.error("Test") == f"{Fore.RED}Test{Style.RESET_ALL}"
+    assert theme_manager.warning("Test") == f"{Fore.YELLOW}Test{Style.RESET_ALL}"
+    assert theme_manager.info("Test") == f"{Fore.BLUE}Test{Style.RESET_ALL}"

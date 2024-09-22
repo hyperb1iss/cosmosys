@@ -93,6 +93,8 @@ class CosmosysConfig(DataClassDictMixin):
     features: Dict[str, bool] = field(default_factory=dict)
     git: Dict[str, Any] = field(default_factory=dict)
     is_auto_detected: bool = False
+    new_version: Optional[str] = None
+    version_part: Optional[str] = None
 
     @classmethod
     def from_file(cls, config_file: str) -> "CosmosysConfig":

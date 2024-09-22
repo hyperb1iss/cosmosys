@@ -1,5 +1,6 @@
 """Command-line interface for Cosmosys."""
 
+from enum import Enum
 from typing import Optional
 
 import typer
@@ -43,6 +44,11 @@ def callback(
     """Cosmosys: A flexible and customizable release management tool."""
     ctx.obj = CosmosysContext(config, theme)
 
+class VersionPart(str, Enum):
+    major = "major"
+    minor = "minor"
+    patch = "patch"
+DEFAULT_PART = typer.Option(None, "--part", help="Part of the version to bump")
 
 @app.command()
 def release(
@@ -50,6 +56,8 @@ def release(
     dry_run: bool = typer.Option(False, help="Perform a dry run without making any changes"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose output"),
     interactive: bool = typer.Option(False, "--interactive", "-i", help="Enable interactive mode"),
+    new_version: Optional[str] = typer.Option(None, "--new-version", help="Set the new version number explicitly"),
+    part: VersionPart = DEFAULT_PART,
 ) -> None:
     """Run the release process."""
     sf_ctx = ctx.obj
@@ -59,6 +67,15 @@ def release(
 
     display_header(ascii_art_manager, console)
     console.gradient("Starting release process...", "primary", "secondary")
+
+    # Print out the current version
+    console.info(f"Current version: {config.project.version}")
+
+    # Set versioning parameters
+    if new_version:
+        config.new_version = new_version
+    if part:
+        config.version_part = part
 
     if config.is_auto_detected:
         console.info("Using auto-detected configuration.")
