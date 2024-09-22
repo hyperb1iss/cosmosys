@@ -3,9 +3,8 @@
 from dataclasses import dataclass, field
 from typing import ClassVar, Dict, List
 
-from colorama import Fore
-
-from rich.text import Style, Text
+from rich.style import Style
+from rich.text import Text
 from mashumaro import DataClassDictMixin
 
 from cosmosys.config import ColorScheme, CosmosysConfig
@@ -39,12 +38,12 @@ class ColorManager(DataClassDictMixin):
         return {
             "default": cls.DEFAULT_SCHEME,
             "neon": ColorScheme(
-                primary="#00FFFF",  # Cyan
-                secondary="#FF00FF",  # Magenta
-                success="#00FF00",  # Green
-                error="#FF0000",  # Red
-                warning="#FFFF00",  # Yellow
-                info="#0000FF",  # Blue
+                primary="#39FF14",  # Neon Green
+                secondary="#FF6EC7",  # Neon Pink
+                success="#0FFF50",  # Spring Green
+                error="#FF073A",  # Neon Red
+                warning="#FFD300",  # Neon Yellow
+                info="#00FFFF",  # Neon Cyan
             ),
             "pastel": ColorScheme(
                 primary="#AFE1FF",  # Light Blue
@@ -69,6 +68,46 @@ class ColorManager(DataClassDictMixin):
                 error="#DC143C",  # Crimson
                 warning="#FFD700",  # Gold
                 info="#1E90FF",  # Dodger Blue
+            ),
+            "forest": ColorScheme(
+                primary="#228B22",  # Forest Green
+                secondary="#8B4513",  # Saddle Brown
+                success="#6B8E23",  # Olive Drab
+                error="#A52A2A",  # Brown
+                warning="#DAA520",  # Goldenrod
+                info="#2E8B57",  # Sea Green
+            ),
+            "midnight": ColorScheme(
+                primary="#191970",  # Midnight Blue
+                secondary="#000000",  # Black
+                success="#2F4F4F",  # Dark Slate Gray
+                error="#8B0000",  # Dark Red
+                warning="#808000",  # Olive
+                info="#00008B",  # Dark Blue
+            ),
+            "rose": ColorScheme(
+                primary="#FF007F",  # Rose
+                secondary="#C71585",  # Medium Violet Red
+                success="#FF69B4",  # Hot Pink
+                error="#DB7093",  # Pale Violet Red
+                warning="#FFC0CB",  # Pink
+                info="#FF1493",  # Deep Pink
+            ),
+            "sunrise": ColorScheme(
+                primary="#FF4500",  # Orange Red
+                secondary="#FFA500",  # Orange
+                success="#FFD700",  # Gold
+                error="#FF69B4",  # Hot Pink
+                warning="#FFFF00",  # Yellow
+                info="#FFE4B5",  # Moccasin
+            ),
+            "grayscale": ColorScheme(
+                primary="#333333",  # Dark Gray
+                secondary="#666666",  # Gray
+                success="#999999",  # Light Gray
+                error="#CCCCCC",  # Very Light Gray
+                warning="#777777",  # Medium Gray
+                info="#BBBBBB",  # Silver
             ),
         }
 
@@ -157,29 +196,25 @@ class ColorManager(DataClassDictMixin):
             rainbow_text.append(char, style=Style(color=color))
         return rainbow_text
 
-    def gradient(self, text: str, start_color: str, end_color: str) -> str:
+    def gradient(self, text: str, start_color_name: str, end_color_name: str) -> Text:
         """Apply a gradient effect to text."""
-        start_rgb = self._fore_to_rgb(start_color)
-        end_rgb = self._fore_to_rgb(end_color)
-        gradient_text = ""
+        start_color_hex = self.get_color(start_color_name)
+        end_color_hex = self.get_color(end_color_name)
+        start_rgb = self._hex_to_rgb(start_color_hex)
+        end_rgb = self._hex_to_rgb(end_color_hex)
+        gradient_text = Text()
+        length = max(len(text) - 1, 1)
         for i, char in enumerate(text):
-            r = int(start_rgb[0] + (end_rgb[0] - start_rgb[0]) * i / len(text))
-            g = int(start_rgb[1] + (end_rgb[1] - start_rgb[1]) * i / len(text))
-            b = int(start_rgb[2] + (end_rgb[2] - start_rgb[2]) * i / len(text))
-            gradient_text += f"\033[38;2;{r};{g};{b}m{char}"
+            ratio = i / length
+            r = int(start_rgb[0] + (end_rgb[0] - start_rgb[0]) * ratio)
+            g = int(start_rgb[1] + (end_rgb[1] - start_rgb[1]) * ratio)
+            b = int(start_rgb[2] + (end_rgb[2] - start_rgb[2]) * ratio)
+            color_code = f"#{r:02X}{g:02X}{b:02X}"
+            gradient_text.append(char, style=Style(color=color_code))
         return gradient_text
 
     @staticmethod
-    def _fore_to_rgb(fore_color: str) -> List[int]:
-        """Convert Fore color to RGB values."""
-        color_map = {
-            Fore.BLACK: [0, 0, 0],
-            Fore.RED: [255, 0, 0],
-            Fore.GREEN: [0, 255, 0],
-            Fore.YELLOW: [255, 255, 0],
-            Fore.BLUE: [0, 0, 255],
-            Fore.MAGENTA: [255, 0, 255],
-            Fore.CYAN: [0, 255, 255],
-            Fore.WHITE: [255, 255, 255],
-        }
-        return color_map.get(fore_color, [255, 255, 255])
+    def _hex_to_rgb(hex_color: str) -> List[int]:
+        """Convert hex color code to RGB values."""
+        hex_color = hex_color.lstrip('#')
+        return [int(hex_color[i:i+2], 16) for i in (0, 2, 4)]

@@ -7,7 +7,7 @@ from typing import Optional
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 from typer import Context, Option
@@ -16,7 +16,7 @@ from cosmosys.ascii_art import ASCIIArtManager
 from cosmosys.color_schemes import ColorManager
 from cosmosys.config import CosmosysConfig, load_config
 from cosmosys.plugin_manager import PluginManager
-from cosmosys.steps.base import StepFactory
+from cosmosys.release import ReleaseManager
 
 app = typer.Typer()
 console = Console()
@@ -70,16 +70,8 @@ def release(
     log_level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(level=log_level, format="%(message)s")
 
-    # Print logo
-    logo = ascii_art_manager.render_logo()
-    logo_panel = Panel(
-        logo,
-        expand=False,
-        border_style=color_manager.get_color("primary"),
-        title="✨ Cosmosys ✨",
-        title_align="center",
-    )
-    console.print(logo_panel)
+    # Display the header
+    display_header(ascii_art_manager, color_manager)
 
     # Print release process start message
     console.print(color_manager.gradient("🌠 Starting release process...", "primary", "secondary"))
@@ -95,59 +87,35 @@ def release(
     if verbose:
         logger.debug(f"Steps to execute: {steps}")
 
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-    ) as progress:
-        for step_name in steps:
-            task = progress.add_task(f"Executing step: {step_name}", total=None)
-            if verbose:
-                logger.debug(f"Processing step: {step_name}")
-            try:
-                step = StepFactory.create(step_name, config)
-                if verbose:
-                    logger.debug(f"Created step: {step}")
-                if not dry_run:
-                    if step.execute():
-                        progress.update(
-                            task,
-                            completed=True,
-                            description=color_manager.success(
-                                f"✅ Step {step_name} completed successfully"
-                            ),
-                        )
-                    else:
-                        progress.update(
-                            task,
-                            completed=True,
-                            description=color_manager.error(f"❌ Step {step_name} failed"),
-                        )
-                        break
-                else:
-                    progress.update(
-                        task,
-                        completed=True,
-                        description=color_manager.info(
-                            f"🔍 Dry run: Step {step_name} would be executed"
-                        ),
-                    )
-            except Exception as e:
-                if verbose:
-                    logger.exception(f"Error in step {step_name}")
-                progress.update(
-                    task,
-                    completed=True,
-                    description=color_manager.error(f"❌ Error in step {step_name}: {str(e)}"),
-                )
-                if verbose:
-                    console.print(
-                        color_manager.error(f"Detailed error: {type(e).__name__}: {str(e)}")
-                    )
-                break
+    release_manager = ReleaseManager(config, console, color_manager, verbose)
 
+    success = release_manager.execute_steps(steps, dry_run)
+
+    display_footer(ascii_art_manager, color_manager, success)
+
+
+def display_header(ascii_art_manager: ASCIIArtManager, color_manager: ColorManager) -> None:
+    """Display the application header with logo."""
+    logo = ascii_art_manager.render_logo()
+    logo_panel = Panel(
+        logo,
+        expand=False,
+        border_style=color_manager.get_color("primary"),
+        title="✨ Cosmosys ✨",
+        title_align="center",
+    )
+    console.print(logo_panel)
+
+
+def display_footer(
+    ascii_art_manager: ASCIIArtManager, color_manager: ColorManager, success: bool
+) -> None:
+    """Display the application footer."""
     console.print(ascii_art_manager.render_starfield())
-    completion_message = color_manager.rainbow("🎉 Release process completed 🎉")
+    if success:
+        completion_message = color_manager.rainbow("🎉 Release process completed successfully 🎉")
+    else:
+        completion_message = color_manager.error("❌ Release process failed ❌")
     console.print(
         Panel(completion_message, expand=False, border_style=color_manager.get_color("primary"))
     )
@@ -182,19 +150,22 @@ def config(
         console.print(color_manager.info(f"{get_key}: {value}"))
 
     if not any([init, set_key, get_key]):
-        table = Table(
-            title="Current Configuration", border_style=color_manager.get_color("primary")
-        )
-        table.add_column("Key", style=color_manager.get_color("secondary"))
-        table.add_column("Value", style=color_manager.get_color("info"))
+        display_config(config, color_manager)
 
-        for key, value in config.to_dict().items():
-            if isinstance(value, dict):
-                table.add_row(key, str(value))
-            else:
-                table.add_row(key, str(value))
 
-        console.print(table)
+def display_config(config: CosmosysConfig, color_manager: ColorManager) -> None:
+    """Display the current configuration."""
+    table = Table(title="Current Configuration", border_style=color_manager.get_color("primary"))
+    table.add_column("Key", style=color_manager.get_color("secondary"))
+    table.add_column("Value", style=color_manager.get_color("info"))
+
+    for key, value in config.to_dict().items():
+        if isinstance(value, dict):
+            table.add_row(key, str(value))
+        else:
+            table.add_row(key, str(value))
+
+    console.print(table)
 
 
 @app.command()
@@ -219,17 +190,7 @@ def theme(
     color_manager = sf_ctx.color_manager
 
     if list_themes:
-        table = Table(
-            title="Available Color Themes", border_style=color_manager.get_color("primary")
-        )
-        table.add_column("Theme Name", style=color_manager.get_color("secondary"))
-        table.add_column("Sample", style=color_manager.get_color("info"))
-
-        for theme_name in color_manager.color_schemes.keys():
-            sample = color_manager.rainbow("■■■■■■")
-            table.add_row(theme_name, sample)
-
-        console.print(table)
+        display_themes(color_manager)
 
     if set_theme:
         if set_theme in color_manager.color_schemes:
@@ -239,6 +200,19 @@ def theme(
             console.print(color_manager.success(f"✅ Color theme set to {set_theme}"))
         else:
             console.print(color_manager.error(f"❌ Invalid theme name: {set_theme}"))
+
+
+def display_themes(color_manager: ColorManager) -> None:
+    """Display the list of available color themes."""
+    table = Table(title="Available Color Themes", border_style=color_manager.get_color("primary"))
+    table.add_column("Theme Name", style=color_manager.get_color("secondary"))
+    table.add_column("Sample", style=color_manager.get_color("info"))
+
+    for theme_name, scheme in color_manager.color_schemes.items():
+        sample = Text(" ██████ ", style=Style(bgcolor=scheme.primary, color=scheme.secondary))
+        table.add_row(theme_name, sample)
+
+    console.print(table)
 
 
 def main() -> None:
