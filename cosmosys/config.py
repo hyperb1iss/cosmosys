@@ -38,8 +38,8 @@ class ProjectConfig(DataClassDictMixin):
 
 
 @dataclass
-class ColorScheme(DataClassDictMixin):
-    """Color scheme configuration."""
+class ThemeConfig(DataClassDictMixin):
+    """Theme configuration."""
 
     primary: str
     secondary: str
@@ -50,7 +50,7 @@ class ColorScheme(DataClassDictMixin):
     emojis: Dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self):
-        """Validate color scheme configuration."""
+        """Validate theme configuration."""
         for color in [
             self.primary,
             self.secondary,
@@ -85,8 +85,8 @@ class CosmosysConfig(DataClassDictMixin):
     """Main configuration class for Cosmosys."""
 
     project: ProjectConfig
-    color_scheme: str = "default"
-    custom_color_schemes: Dict[str, ColorScheme] = field(default_factory=dict)
+    theme: str = "default"
+    custom_themes: Dict[str, ThemeConfig] = field(default_factory=dict)
     release: ReleaseConfig = field(default_factory=ReleaseConfig)
     features: Dict[str, bool] = field(default_factory=dict)
     git: Dict[str, Any] = field(default_factory=dict)
@@ -235,12 +235,12 @@ class CosmosysConfig(DataClassDictMixin):
         # Validate project config
         self.project.__post_init__()
 
-        # Validate color schemes
-        for scheme_name, scheme in self.custom_color_schemes.items():
+        # Validate themes
+        for theme_name, theme in self.custom_themes.items():
             try:
-                scheme.__post_init__()
+                theme.__post_init__()
             except ConfigurationError as e:
-                raise ConfigurationError(f"Invalid color scheme '{scheme_name}': {str(e)}")
+                raise ConfigurationError(f"Invalid theme '{theme_name}': {str(e)}")
 
         # Validate release config
         self.release.__post_init__()

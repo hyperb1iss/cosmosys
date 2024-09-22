@@ -1,38 +1,27 @@
-import logging
-from rich.console import Console
-from rich.progress import (
-    BarColumn,
-    Progress,
-    SpinnerColumn,
-    TextColumn,
-    TimeElapsedColumn,
-)
-from rich.panel import Panel
-from cosmosys.color_schemes import ColorManager
+"""Release management module for Cosmosys."""
+
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+
+from cosmosys.console import CosmosysConsole
+
 from cosmosys.config import CosmosysConfig
 from cosmosys.steps.base import StepFactory
-
-logger = logging.getLogger(__name__)
 
 
 class ReleaseManager:
     """Manages the execution of release steps."""
 
-    def __init__(
-        self, config: CosmosysConfig, console: Console, color_manager: ColorManager, verbose: bool
-    ):
+    def __init__(self, config: CosmosysConfig, console: CosmosysConsole, verbose: bool):
         """
         Initialize the ReleaseManager.
 
         Args:
             config (CosmosysConfig): The configuration object.
-            console (Console): The Rich console for output.
-            color_manager (ColorManager): The color manager.
+            console (CosmosysConsole): The Cosmosys console for output.
             verbose (bool): Whether to enable verbose output.
         """
         self.config = config
         self.console = console
-        self.color_manager = color_manager
         self.verbose = verbose
 
     def execute_steps(self, steps: list, dry_run: bool) -> bool:
@@ -47,63 +36,51 @@ class ReleaseManager:
         """
         success = True
         with Progress(
-            SpinnerColumn(style=self.color_manager.get_color("primary")),
+            SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
-            BarColumn(bar_width=None, style=self.color_manager.get_color("secondary")),
+            BarColumn(),
             TimeElapsedColumn(),
-            console=self.console,
+            console=self.console.console,
             transient=True,
         ) as progress:
             for step_name in steps:
-                task = progress.add_task(f"Executing step: {step_name}", total=None)
+                task = progress.add_task(f"Executing: {step_name}", total=None)
                 if self.verbose:
-                    logger.debug(f"Processing step: {step_name}")
+                    self.console.info(f"Processing step: {step_name}")
                 try:
                     step = StepFactory.create(step_name, self.config)
-                    if self.verbose:
-                        logger.debug(f"Created step: {step}")
-                    if not dry_run:
-                        if step.execute():
-                            progress.update(
-                                task,
-                                completed=True,
-                                description=self.color_manager.success(
-                                    f"✅ Step {step_name} completed successfully"
-                                ),
-                            )
-                        else:
-                            progress.update(
-                                task,
-                                completed=True,
-                                description=self.color_manager.error(f"❌ Step {step_name} failed"),
-                            )
-                            self.rollback_steps(steps[: steps.index(step_name)])
-                            success = False
-                            break
+                    if dry_run:
+                        progress.update(
+                            task,
+                            completed=True,
+                            description=f"Dry run: {step_name}",
+                        )
+                        self.console.info(f"Dry run: {step_name} (simulated execution)")
+                    elif step.execute():
+                        progress.update(
+                            task,
+                            completed=True,
+                            description=f"Completed: {step_name}",
+                        )
+                        self.console.success(f"Completed: {step_name}")
                     else:
                         progress.update(
                             task,
                             completed=True,
-                            description=self.color_manager.info(
-                                f"🔍 Dry run: Step {step_name} would be executed"
-                            ),
+                            description=f"Failed: {step_name}",
                         )
+                        self.console.error(f"Failed: {step_name}")
+                        self.rollback_steps(steps[: steps.index(step_name)])
+                        success = False
+                        break
                 except Exception as e:
-                    if self.verbose:
-                        logger.exception(f"Error in step {step_name}")
                     progress.update(
                         task,
                         completed=True,
-                        description=self.color_manager.error(
-                            f"❌ Error in step {step_name}: {str(e)}"
-                        ),
+                        description=f"Error: {step_name}",
                     )
                     if self.verbose:
-                        self.console.print(
-                            self.color_manager.error(
-                                f"Detailed error: {type(e).__name__}: {str(e)}"
-                            )
-                        )
+                        self.console.error(f"Detailed error: {type(e).__name__}: {str(e)}")
                     self.rollback_steps(steps[: steps.index(step_name)])
                     success = False
                     break
@@ -115,22 +92,13 @@ class ReleaseManager:
         Args:
             executed_steps (list): List of executed step names.
         """
-        self.console.print(self.color_manager.warning("⚠️ Rolling back changes..."))
+        self.console.warning("Rolling back changes...")
         for step_name in reversed(executed_steps):
             try:
                 step = StepFactory.create(step_name, self.config)
                 step.rollback()
                 if self.verbose:
-                    logger.debug(f"Rolled back step: {step_name}")
+                    self.console.info(f"Rolled back: {step_name}")
             except Exception as e:
-                if self.verbose:
-                    logger.exception(f"Error rolling back step {step_name}")
-                self.console.print(
-                    self.color_manager.error(f"Error rolling back step {step_name}: {str(e)}")
-                )
-        self.console.print(
-            Panel(
-                self.color_manager.warning("🚨 Rollback completed."),
-                border_style=self.color_manager.get_color("error"),
-            )
-        )
+                self.console.error(f"Error rolling back {step_name}: {str(e)}")
+        self.console.warning("Rollback completed.")

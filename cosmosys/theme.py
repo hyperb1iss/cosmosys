@@ -1,56 +1,58 @@
-"""Color scheme management for Cosmosys."""
+"""Theme management for Cosmosys."""
 
 import os
 from dataclasses import dataclass, field
 from typing import Dict, List
 
 import toml
+from rich.console import Console
+from rich.panel import Panel
 from rich.style import Style
 from rich.text import Text
 from mashumaro import DataClassDictMixin
 
-from cosmosys.config import ColorScheme, CosmosysConfig
+from cosmosys.config import ThemeConfig, CosmosysConfig
 
 
 @dataclass
-class ColorManager(DataClassDictMixin):
-    """Manages color schemes and provides color rendering functionality."""
+class ThemeManager(DataClassDictMixin):
+    """Manages themes and provides color rendering functionality."""
 
     config: CosmosysConfig
-    current_scheme: ColorScheme = field(init=False)
-    color_schemes: Dict[str, ColorScheme] = field(init=False)
+    current_theme: ThemeConfig = field(init=False)
+    themes: Dict[str, ThemeConfig] = field(init=False)
     emojis: Dict[str, str] = field(init=False)
 
     def __post_init__(self) -> None:
-        """Initialize color schemes and set the current scheme."""
-        self.color_schemes = self.load_themes()
-        self.current_scheme = self.get_scheme(self.config.color_scheme)
-        self.emojis = self.color_schemes[self.config.color_scheme].emojis
+        """Initialize themes and set the current theme."""
+        self.themes = self.load_themes()
+        self.current_theme = self.get_theme(self.config.theme)
+        self.emojis = self.themes[self.config.theme].emojis
 
     @staticmethod
-    def load_themes() -> Dict[str, ColorScheme]:
+    def load_themes() -> Dict[str, ThemeConfig]:
         """Load themes from the themes.toml file."""
         themes_file = os.path.join(os.path.dirname(__file__), "themes.toml")
         with open(themes_file, "r") as f:
             themes_data = toml.load(f)
 
-        return {name: ColorScheme(**theme) for name, theme in themes_data.items()}
+        return {name: ThemeConfig(**theme) for name, theme in themes_data.items()}
 
-    def get_scheme(self, scheme_name: str) -> ColorScheme:
-        """Get a color scheme by name."""
-        return self.color_schemes.get(scheme_name, self.color_schemes["default"])
+    def get_theme(self, theme_name: str) -> ThemeConfig:
+        """Get a theme by name."""
+        return self.themes.get(theme_name, self.themes["default"])
 
-    def set_scheme(self, scheme_name: str) -> None:
-        """Set the current color scheme."""
-        self.current_scheme = self.get_scheme(scheme_name)
-        self.emojis = self.current_scheme.emojis
+    def set_theme(self, theme_name: str) -> None:
+        """Set the current theme."""
+        self.current_theme = self.get_theme(theme_name)
+        self.emojis = self.current_theme.emojis
 
     def get_color(self, color_name: str) -> str:
-        """Get a color value from the current scheme."""
-        return getattr(self.current_scheme, color_name)
+        """Get a color value from the current theme."""
+        return getattr(self.current_theme, color_name)
 
     def colorize(self, text: str, color: str) -> Text:
-        """Colorize text using the current color scheme."""
+        """Colorize text using the current theme."""
         return Text(text, style=Style(color=self.get_color(color)))
 
     def primary(self, text: str) -> Text:
@@ -117,3 +119,30 @@ class ColorManager(DataClassDictMixin):
             "underline": lambda t: Text(t, style=Style(underline=True)),
         }
         return style_methods.get(style_name, lambda t: Text(t))(text)
+
+
+def preview_theme(theme_manager: ThemeManager, console: Console) -> None:
+    """Preview the essential elements of a theme."""
+    # Header
+    console.print(Panel(
+        Text("Theme Preview", style=f"bold {theme_manager.get_color('primary')}"),
+        border_style=theme_manager.get_color("secondary"),
+    ))
+
+    # Example text for each level
+    console.print(theme_manager.primary("Primary text"))
+    console.print(theme_manager.secondary("Secondary text"))
+    console.print(theme_manager.success("Success message"))
+    console.print(theme_manager.error("Error message"))
+    console.print(theme_manager.warning("Warning message"))
+    console.print(theme_manager.info("Info message"))
+
+    # Special text effects
+    console.print(theme_manager.rainbow("Rainbow text example"))
+    console.print(theme_manager.gradient("Gradient text example", "primary", "secondary"))
+
+    # Footer
+    console.print(Panel(
+        Text("End of Preview", style=f"bold {theme_manager.get_color('secondary')}"),
+        border_style=theme_manager.get_color("primary"),
+    ))

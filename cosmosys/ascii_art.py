@@ -3,22 +3,22 @@
 import random
 from typing import List, Optional
 
-from cosmosys.color_schemes import ColorManager
+from cosmosys.theme import ThemeManager
 
 
 class ASCIIArt:
-    """Represents a single piece of ASCII art with color management."""
+    """Represents a single piece of ASCII art with theme management."""
 
-    def __init__(self, art: str, color_manager: ColorManager):
+    def __init__(self, art: str, theme_manager: ThemeManager):
         """
         Initialize an ASCIIArt object.
 
         Args:
             art (str): The ASCII art string.
-            color_manager (ColorManager): The color manager for rendering.
+            theme_manager (ThemeManager): The theme manager for rendering.
         """
         self.art = art.strip()
-        self.color_manager = color_manager
+        self.theme_manager = theme_manager
 
     def render(self, color: Optional[str] = None) -> str:
         """
@@ -31,7 +31,7 @@ class ASCIIArt:
             str: The rendered ASCII art.
         """
         if color:
-            return str(getattr(self.color_manager, color)(self.art))
+            return str(self.theme_manager.colorize(self.art, color))
         return self.art
 
     @staticmethod
@@ -73,15 +73,15 @@ DEFAULT_LOGO = [
 class ASCIIArtManager:
     """Manages multiple ASCII art pieces and provides rendering options."""
 
-    def __init__(self, color_manager: ColorManager):
+    def __init__(self, theme_manager: ThemeManager):
         """
         Initialize an ASCIIArtManager object.
 
         Args:
-            color_manager (ColorManager): The color manager for rendering.
+            theme_manager (ThemeManager): The theme manager for rendering.
         """
-        self.color_manager = color_manager
-        self.logo = ASCIIArt("\n".join(DEFAULT_LOGO), self.color_manager)
+        self.theme_manager = theme_manager
+        self.logo = ASCIIArt("\n".join(DEFAULT_LOGO), self.theme_manager)
         self.arts: List[ASCIIArt] = []
 
     def add_art(self, art: str) -> None:
@@ -91,7 +91,7 @@ class ASCIIArtManager:
         Args:
             art (str): The ASCII art string to add.
         """
-        self.arts.append(ASCIIArt(art, self.color_manager))
+        self.arts.append(ASCIIArt(art, self.theme_manager))
 
     def render_logo(self, color: Optional[str] = None) -> str:
         """
@@ -135,4 +135,4 @@ class ASCIIArtManager:
             str: The rendered starfield ASCII art.
         """
         stars = ASCIIArt.generate_stars(width, height, density)
-        return ASCIIArt(stars, self.color_manager).render(color)
+        return ASCIIArt(stars, self.theme_manager).render(color)
