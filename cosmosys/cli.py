@@ -13,13 +13,13 @@ from cosmosys.steps.base import StepFactory
 
 app = typer.Typer()
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 
 class CosmosysContext:
     """Context object for Cosmosys CLI commands."""
 
-    def __init__(self, config_file: str):
+    def __init__(self, config_file: str, color_scheme: str):
         """
         Initialize the Cosmosys context.
 
@@ -28,6 +28,7 @@ class CosmosysContext:
         """
         self.config: CosmosysConfig = load_config(config_file)
         self.color_manager: ColorManager = ColorManager(self.config)
+        self.color_manager.set_scheme(color_scheme)
         self.ascii_art_manager: ASCIIArtManager = ASCIIArtManager(self.color_manager)
         self.plugin_manager: PluginManager = PluginManager(self.config)
         self.plugin_manager.load_plugins()
@@ -37,42 +38,53 @@ class CosmosysContext:
 def callback(
     ctx: Context,
     config: str = Option("cosmosys.toml", help="Path to the configuration file"),
+    color_scheme: str = Option("default", help="Color scheme to use"),
 ) -> None:
     """Cosmosys: A flexible and customizable release management tool."""
     if not isinstance(ctx.obj, CosmosysContext):
-        ctx.obj = CosmosysContext(config)
+        ctx.obj = CosmosysContext(config, color_scheme)
 
 
 @app.command()
 def release(
     ctx: Context,
     dry_run: bool = Option(False, help="Perform a dry run without making any changes"),
+    verbose: bool = Option(False, "--verbose", "-v", help="Enable verbose output"),
 ) -> None:
     """Run the release process."""
-    if isinstance(ctx.obj, CosmosysContext):
-        sf_ctx = ctx.obj
-        config = sf_ctx.config
-        color_manager = sf_ctx.color_manager
-        ascii_art_manager = sf_ctx.ascii_art_manager
-    else:
-        config = ctx.obj
-        color_manager = ColorManager(config)
-        ascii_art_manager = ASCIIArtManager(color_manager)
+    sf_ctx = ctx.obj
+    config = sf_ctx.config
+    color_manager = sf_ctx.color_manager
+    ascii_art_manager = sf_ctx.ascii_art_manager
 
+    # Set up logging
+    log_level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(level=log_level, format="%(message)s")
+
+    # Print logo
     typer.echo(ascii_art_manager.render_logo("primary"))
+
+    # Print release process start message
     typer.echo(color_manager.primary("Starting release process..."))
+
+    # Print config auto-detection message if necessary
+    if config.is_auto_detected:
+        typer.echo(color_manager.info("Using auto-detected configuration."))
 
     if dry_run:
         typer.echo(color_manager.warning("Dry run mode: No changes will be made"))
 
     steps = config.get_steps()
-    logger.debug("Steps to execute: %s", steps)
+    if verbose:
+        logger.debug(f"Steps to execute: {steps}")
 
     for step_name in steps:
-        logger.debug("Processing step: %s", step_name)
+        if verbose:
+            logger.debug(f"Processing step: {step_name}")
         try:
             step = StepFactory.create(step_name, config)
-            logger.debug("Created step: %s", step)
+            if verbose:
+                logger.debug(f"Created step: {step}")
             typer.echo(color_manager.info(f"Executing step: {step_name}"))
             if not dry_run:
                 if step.execute():
@@ -83,12 +95,16 @@ def release(
             else:
                 typer.echo(color_manager.info(f"Dry run: Step {step_name} would be executed"))
         except Exception as e:
-            logger.exception("Error in step %s", step_name, exc_info=e)
+            if verbose:
+                logger.exception(f"Error in step {step_name}")
             typer.echo(color_manager.error(f"Error in step {step_name}: {str(e)}"))
+            if verbose:
+                typer.echo(color_manager.error(f"Detailed error: {type(e).__name__}: {str(e)}"))
             break
 
     typer.echo(ascii_art_manager.render_starfield(color="secondary"))
     typer.echo(color_manager.primary("Release process completed"))
+
 
 @app.command()
 def config(

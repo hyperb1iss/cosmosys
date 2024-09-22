@@ -81,9 +81,9 @@ def test_load_config_file_not_found(temp_dir):
 def test_load_config_invalid_toml(temp_dir):
     """Test loading configuration with invalid TOML."""
     Path("invalid_config.toml").write_text("invalid = toml :")
-    with pytest.warns(UserWarning):
-        config = load_config("invalid_config.toml")
+    config = load_config("invalid_config.toml")
     assert isinstance(config, CosmosysConfig)
+    assert config.is_auto_detected
     assert config.project.project_type == "unknown"
 
 
@@ -110,7 +110,7 @@ def test_get_and_set_config_values():
         ),
     )
     config.set("features.new_feature", True)
-    assert config.get("features.new_feature") == True
+    assert config.get("features.new_feature")
     assert config.get("non_existent_key", "default") == "default"
 
 

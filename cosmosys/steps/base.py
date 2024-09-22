@@ -1,3 +1,4 @@
+# ruff: noqa: E402, F401
 """Base classes and utilities for Cosmosys release steps."""
 
 from abc import ABC, abstractmethod
@@ -94,3 +95,11 @@ class StepFactory:
             Dict[str, Type[Step]]: A dictionary of step names and their corresponding classes.
         """
         return cls._steps.copy()
+
+
+def initialize_steps() -> None:
+    """Initialize and register all steps."""
+    from .changelog_update import ChangelogUpdateStep
+    from .git_commit import GitCommitStep
+    from .git_tag import GitTagStep
+    from .version_update import VersionUpdateStep

@@ -4,7 +4,6 @@ import json
 import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
-import warnings
 
 import toml
 from mashumaro import DataClassDictMixin
@@ -52,7 +51,8 @@ class CosmosysConfig(DataClassDictMixin):
     release: ReleaseConfig = field(default_factory=ReleaseConfig)
     features: Dict[str, bool] = field(default_factory=dict)
     git: Dict[str, Any] = field(default_factory=dict)
-
+    is_auto_detected: bool = False
+    
     @classmethod
     def from_file(cls, config_file: str) -> "CosmosysConfig":
         """
@@ -69,18 +69,8 @@ class CosmosysConfig(DataClassDictMixin):
                 config_data = toml.load(f)
             return cls.from_dict(config_data)
         except FileNotFoundError:
-            warnings.warn(
-                f"Configuration file not found: {config_file}. Using auto-detected configuration.",
-                UserWarning,
-                stacklevel=2,
-            )
             return cls.auto_detect_config()
-        except toml.TomlDecodeError as e:
-            warnings.warn(
-                f"Invalid TOML in configuration file: {e}. Using auto-detected configuration.",
-                UserWarning,
-                stacklevel=2,
-            )
+        except toml.TomlDecodeError:
             return cls.auto_detect_config()
 
     @classmethod
@@ -98,6 +88,7 @@ class CosmosysConfig(DataClassDictMixin):
                 project_type=project_type,
             ),
             release=ReleaseConfig(steps=cls.get_default_steps(project_type)),
+            is_auto_detected=True
         )
 
     @staticmethod
