@@ -5,14 +5,17 @@ from typing import Optional
 import typer
 from rich.console import Console
 from rich.panel import Panel
+from rich.style import Style
 from rich.table import Table
+from rich.text import Text
+from wcwidth import wcswidth
 
 from cosmosys.ascii_art import ASCIIArtManager
-from cosmosys.theme import ThemeManager, preview_theme
 from cosmosys.config import CosmosysConfig, load_config
+from cosmosys.console import CosmosysConsole
 from cosmosys.plugin_manager import PluginManager
 from cosmosys.release import ReleaseManager
-from cosmosys.console import CosmosysConsole
+from cosmosys.theme import ThemeManager, preview_theme
 
 app = typer.Typer()
 console = Console()
@@ -197,14 +200,37 @@ def theme(
 
 
 def display_themes(theme_manager: ThemeManager, console: CosmosysConsole) -> None:
-    """Display the list of available themes."""
-    table = Table(title="Available Themes", border_style=theme_manager.get_color("primary"))
+    """Display the list of available themes with color swatches and emoji samples."""
+    table = Table(
+        title="Available Themes",
+        box=None,
+        padding=(0, 1),
+        show_header=True,
+        header_style=theme_manager.get_color("primary"),
+    )
     table.add_column("Theme Name", style=theme_manager.get_color("secondary"))
-    table.add_column("Sample", style=theme_manager.get_color("info"))
+    table.add_column("Color Swatches", style=theme_manager.get_color("info"))
+    table.add_column("Emoji Sample", style=theme_manager.get_color("info"))
+
+    def safe_char(char: str) -> str:
+        """Replace potentially problematic characters with a safe alternative."""
+        return "□" if wcswidth(char) < 0 else char
 
     for theme_name, scheme in theme_manager.themes.items():
-        sample = " ".join([scheme.emojis[key] for key in ["success", "error", "warning", "info"]])
-        table.add_row(theme_name, sample)
+        # Create color swatches
+        swatches = Text()
+        for color_name in ["primary", "secondary", "success", "error", "warning", "info"]:
+            color = getattr(scheme, color_name)
+            swatches.append("██", style=Style(color=color))
+            swatches.append(" ")
+
+        # Create emoji sample
+        sample = Text()
+        for key in ["success", "error", "warning", "info"]:
+            emoji = safe_char(scheme.emojis[key])
+            sample.append(emoji + " ", style=theme_manager.get_color(key))
+
+        table.add_row(theme_name, swatches, sample)
 
     console.console.print(table)
 

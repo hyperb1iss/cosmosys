@@ -5,13 +5,14 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 
 import toml
+from mashumaro import DataClassDictMixin
 from rich.console import Console
 from rich.panel import Panel
 from rich.style import Style
 from rich.text import Text
-from mashumaro import DataClassDictMixin
+from wcwidth import wcswidth
 
-from cosmosys.config import ThemeConfig, CosmosysConfig
+from cosmosys.config import CosmosysConfig, ThemeConfig
 
 
 @dataclass
@@ -95,9 +96,10 @@ class ThemeManager(DataClassDictMixin):
         start_rgb = self._hex_to_rgb(start_color_hex)
         end_rgb = self._hex_to_rgb(end_color_hex)
         gradient_text = Text()
-        length = max(len(text) - 1, 1)
-        for i, char in enumerate(text):
-            ratio = i / length
+        length = max(wcswidth(text) - 1, 1)
+        for char in text:
+            char_width = wcswidth(char)
+            ratio = char_width / length
             r = int(start_rgb[0] + (end_rgb[0] - start_rgb[0]) * ratio)
             g = int(start_rgb[1] + (end_rgb[1] - start_rgb[1]) * ratio)
             b = int(start_rgb[2] + (end_rgb[2] - start_rgb[2]) * ratio)
@@ -124,10 +126,12 @@ class ThemeManager(DataClassDictMixin):
 def preview_theme(theme_manager: ThemeManager, console: Console) -> None:
     """Preview the essential elements of a theme."""
     # Header
-    console.print(Panel(
-        Text("Theme Preview", style=f"bold {theme_manager.get_color('primary')}"),
-        border_style=theme_manager.get_color("secondary"),
-    ))
+    console.print(
+        Panel(
+            Text("Theme Preview", style=f"bold {theme_manager.get_color('primary')}"),
+            border_style=theme_manager.get_color("secondary"),
+        )
+    )
 
     # Example text for each level
     console.print(theme_manager.primary("Primary text"))
@@ -142,7 +146,9 @@ def preview_theme(theme_manager: ThemeManager, console: Console) -> None:
     console.print(theme_manager.gradient("Gradient text example", "primary", "secondary"))
 
     # Footer
-    console.print(Panel(
-        Text("End of Preview", style=f"bold {theme_manager.get_color('secondary')}"),
-        border_style=theme_manager.get_color("primary"),
-    ))
+    console.print(
+        Panel(
+            Text("End of Preview", style=f"bold {theme_manager.get_color('secondary')}"),
+            border_style=theme_manager.get_color("primary"),
+        )
+    )

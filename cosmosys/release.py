@@ -2,9 +2,8 @@
 
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
-from cosmosys.console import CosmosysConsole
-
 from cosmosys.config import CosmosysConfig
+from cosmosys.console import CosmosysConsole
 from cosmosys.steps.base import StepFactory
 
 
