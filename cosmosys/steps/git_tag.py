@@ -7,6 +7,7 @@ from cosmosys.steps.base import Step, StepFactory
 
 logger = logging.getLogger(__name__)
 
+
 @StepFactory.register("git_tag")
 class GitTagStep(Step):
     """Step for creating a Git tag during the release process."""
