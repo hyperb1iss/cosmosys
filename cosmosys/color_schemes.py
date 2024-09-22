@@ -109,6 +109,15 @@ class ColorManager(DataClassDictMixin):
                 warning="#777777",  # Medium Gray
                 info="#BBBBBB",  # Silver
             ),
+            # Added a new "galaxy" theme
+            "galaxy": ColorScheme(
+                primary="#8A2BE2",  # Blue Violet
+                secondary="#4B0082",  # Indigo
+                success="#7FFF00",  # Chartreuse
+                error="#FF4500",  # Orange Red
+                warning="#FFD700",  # Gold
+                info="#00CED1",  # Dark Turquoise
+            ),
         }
 
     def __post_init__(self) -> None:
@@ -218,3 +227,21 @@ class ColorManager(DataClassDictMixin):
         """Convert hex color code to RGB values."""
         hex_color = hex_color.lstrip('#')
         return [int(hex_color[i:i+2], 16) for i in (0, 2, 4)]
+
+    def apply_style(self, text: str, style_name: str) -> Text:
+        """
+        Apply a predefined style to the text.
+
+        Args:
+            text (str): The text to style.
+            style_name (str): The style to apply.
+
+        Returns:
+            Text: The styled text.
+        """
+        style_methods = {
+            "bold": lambda t: Text(t, style=Style(bold=True)),
+            "italic": lambda t: Text(t, style=Style(italic=True)),
+            "underline": lambda t: Text(t, style=Style(underline=True)),
+        }
+        return style_methods.get(style_name, lambda t: Text(t))(text)

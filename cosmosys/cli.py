@@ -59,6 +59,7 @@ def release(
     ctx: Context,
     dry_run: bool = Option(False, help="Perform a dry run without making any changes"),
     verbose: bool = Option(False, "--verbose", "-v", help="Enable verbose output"),
+    interactive: bool = Option(False, "--interactive", "-i", help="Enable interactive mode"),
 ) -> None:
     """Run the release process."""
     sf_ctx = ctx.obj
@@ -89,6 +90,9 @@ def release(
 
     release_manager = ReleaseManager(config, console, color_manager, verbose)
 
+    if interactive:
+        steps = prompt_for_steps(steps, color_manager)
+
     success = release_manager.execute_steps(steps, dry_run)
 
     display_footer(ascii_art_manager, color_manager, success)
@@ -96,12 +100,12 @@ def release(
 
 def display_header(ascii_art_manager: ASCIIArtManager, color_manager: ColorManager) -> None:
     """Display the application header with logo."""
-    logo = ascii_art_manager.render_logo()
+    logo = ascii_art_manager.render_logo(color="primary")
     logo_panel = Panel(
         logo,
         expand=False,
-        border_style=color_manager.get_color("primary"),
-        title="✨ Cosmosys ✨",
+        border_style=color_manager.get_color("secondary"),
+        title=color_manager.apply_style("✨ Cosmosys ✨", "bold"),
         title_align="center",
     )
     console.print(logo_panel)
@@ -111,7 +115,7 @@ def display_footer(
     ascii_art_manager: ASCIIArtManager, color_manager: ColorManager, success: bool
 ) -> None:
     """Display the application footer."""
-    console.print(ascii_art_manager.render_starfield())
+    console.print(ascii_art_manager.render_starfield(color="secondary"))
     if success:
         completion_message = color_manager.rainbow("🎉 Release process completed successfully 🎉")
     else:
@@ -119,6 +123,26 @@ def display_footer(
     console.print(
         Panel(completion_message, expand=False, border_style=color_manager.get_color("primary"))
     )
+
+
+def prompt_for_steps(steps: list, color_manager: ColorManager) -> list:
+    """
+    Prompt the user to confirm or modify the list of steps.
+
+    Args:
+        steps (list): The initial list of steps.
+        color_manager (ColorManager): The color manager for styling.
+
+    Returns:
+        list: The potentially modified list of steps.
+    """
+    console.print(color_manager.info("🔄 Interactive mode enabled."))
+    confirmed_steps = []
+    for step in steps:
+        response = typer.confirm(f"Do you want to execute the step '{step}'?", default=True)
+        if response:
+            confirmed_steps.append(step)
+    return confirmed_steps
 
 
 @app.command()
@@ -159,11 +183,8 @@ def display_config(config: CosmosysConfig, color_manager: ColorManager) -> None:
     table.add_column("Key", style=color_manager.get_color("secondary"))
     table.add_column("Value", style=color_manager.get_color("info"))
 
-    for key, value in config.to_dict().items():
-        if isinstance(value, dict):
-            table.add_row(key, str(value))
-        else:
-            table.add_row(key, str(value))
+    for key, value in config.to_flat_dict().items():
+        table.add_row(key, str(value))
 
     console.print(table)
 
@@ -184,6 +205,7 @@ def theme(
     ctx: Context,
     list_themes: bool = Option(False, "--list", help="List available color themes"),
     set_theme: Optional[str] = Option(None, "--set", help="Set the color theme"),
+    preview_theme: Optional[str] = Option(None, "--preview", help="Preview a color theme"),
 ) -> None:
     """Manage Cosmosys color themes."""
     sf_ctx = ctx.obj
@@ -201,6 +223,15 @@ def theme(
         else:
             console.print(color_manager.error(f"❌ Invalid theme name: {set_theme}"))
 
+    if preview_theme:
+        if preview_theme in color_manager.color_schemes:
+            color_manager.set_scheme(preview_theme)
+            display_header(sf_ctx.ascii_art_manager, color_manager)
+            console.print(color_manager.info(f"Previewing theme: {preview_theme}"))
+            display_footer(sf_ctx.ascii_art_manager, color_manager, success=True)
+        else:
+            console.print(color_manager.error(f"❌ Invalid theme name: {preview_theme}"))
+
 
 def display_themes(color_manager: ColorManager) -> None:
     """Display the list of available color themes."""
@@ -211,6 +242,47 @@ def display_themes(color_manager: ColorManager) -> None:
     for theme_name, scheme in color_manager.color_schemes.items():
         sample = Text(" ██████ ", style=Style(bgcolor=scheme.primary, color=scheme.secondary))
         table.add_row(theme_name, sample)
+
+    console.print(table)
+
+
+@app.command()
+def plugins(
+    ctx: Context,
+    list_plugins: bool = Option(False, "--list", help="List available plugins"),
+    info_plugin: Optional[str] = Option(None, "--info", help="Get info about a plugin"),
+) -> None:
+    """Manage Cosmosys plugins."""
+    sf_ctx = ctx.obj
+    plugin_manager = sf_ctx.plugin_manager
+    color_manager = sf_ctx.color_manager
+
+    if list_plugins:
+        display_plugins(plugin_manager, color_manager)
+
+    if info_plugin:
+        plugin_info = plugin_manager.get_plugin_info(info_plugin)
+        if plugin_info:
+            console.print(
+                Panel(
+                    Text(plugin_info),
+                    title=color_manager.secondary(f"Plugin: {info_plugin}"),
+                    border_style=color_manager.get_color("primary"),
+                )
+            )
+        else:
+            console.print(color_manager.error(f"❌ Plugin not found: {info_plugin}"))
+
+
+def display_plugins(plugin_manager: PluginManager, color_manager: ColorManager) -> None:
+    """Display the list of available plugins."""
+    plugins = plugin_manager.get_available_plugins()
+    table = Table(title="Available Plugins", border_style=color_manager.get_color("primary"))
+    table.add_column("Plugin Name", style=color_manager.get_color("secondary"))
+    table.add_column("Description", style=color_manager.get_color("info"))
+
+    for plugin_name, plugin_desc in plugins.items():
+        table.add_row(plugin_name, plugin_desc)
 
     console.print(table)
 

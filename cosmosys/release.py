@@ -1,7 +1,13 @@
 import logging
 from rich.console import Console
-from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
-
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
+from rich.panel import Panel
 from cosmosys.color_schemes import ColorManager
 from cosmosys.config import CosmosysConfig
 from cosmosys.steps.base import StepFactory
@@ -41,11 +47,12 @@ class ReleaseManager:
         """
         success = True
         with Progress(
-            SpinnerColumn(),
+            SpinnerColumn(style=self.color_manager.get_color("primary")),
             TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
+            BarColumn(bar_width=None, style=self.color_manager.get_color("secondary")),
             TimeElapsedColumn(),
             console=self.console,
+            transient=True,
         ) as progress:
             for step_name in steps:
                 task = progress.add_task(f"Executing step: {step_name}", total=None)
@@ -121,3 +128,9 @@ class ReleaseManager:
                 self.console.print(
                     self.color_manager.error(f"Error rolling back step {step_name}: {str(e)}")
                 )
+        self.console.print(
+            Panel(
+                self.color_manager.warning("🚨 Rollback completed."),
+                border_style=self.color_manager.get_color("error"),
+            )
+        )

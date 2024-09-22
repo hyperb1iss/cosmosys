@@ -52,7 +52,7 @@ class CosmosysConfig(DataClassDictMixin):
     features: Dict[str, bool] = field(default_factory=dict)
     git: Dict[str, Any] = field(default_factory=dict)
     is_auto_detected: bool = False
-    
+
     @classmethod
     def from_file(cls, config_file: str) -> "CosmosysConfig":
         """
@@ -220,6 +220,25 @@ class CosmosysConfig(DataClassDictMixin):
     def is_feature_enabled(self, feature: str) -> bool:
         """Check if a feature is enabled."""
         return self.features.get(feature, False)
+
+    def to_flat_dict(self) -> Dict[str, Any]:
+        """
+        Convert the configuration to a flat dictionary.
+
+        Returns:
+            Dict[str, Any]: A flat dictionary representation of the configuration.
+        """
+        flat_dict = {}
+
+        def recurse(prefix: str, obj: Any):
+            if isinstance(obj, dict):
+                for k, v in obj.items():
+                    recurse(f"{prefix}.{k}" if prefix else k, v)
+            else:
+                flat_dict[prefix] = obj
+
+        recurse("", self.to_dict())
+        return flat_dict
 
 
 def load_config(config_file: str = DEFAULT_CONFIG_FILE) -> CosmosysConfig:

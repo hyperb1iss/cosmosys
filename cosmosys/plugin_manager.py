@@ -53,3 +53,27 @@ class PluginManager:
             Optional[Type[Step]]: The plugin class if found, None otherwise.
         """
         return self.plugins.get(name)
+
+    def get_plugin_info(self, name: str) -> Optional[str]:
+        """
+        Get information about a plugin.
+
+        Args:
+            name (str): The name of the plugin.
+
+        Returns:
+            Optional[str]: Description of the plugin if available.
+        """
+        plugin = self.get_plugin(name)
+        if plugin and plugin.__doc__:
+            return plugin.__doc__
+        return None
+
+    def get_available_plugins(self) -> Dict[str, str]:
+        """
+        Get a list of available plugins and their descriptions.
+
+        Returns:
+            Dict[str, str]: A dictionary of plugin names and descriptions.
+        """
+        return {name: (cls.__doc__ or "No description available") for name, cls in self.plugins.items()}
