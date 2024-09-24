@@ -2,7 +2,6 @@
 """Release management module for Cosmosys."""
 
 from typing import List
-from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
 from cosmosys.config import CosmosysConfig
 from cosmosys.console import CosmosysConsole
@@ -38,59 +37,30 @@ class ReleaseManager:
             bool: True if all steps completed successfully, False otherwise.
         """
         success = True
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TimeElapsedColumn(),
-            console=self.console.console,
-            transient=True,
-        ) as progress:
-            for step_name in steps:
-                task = progress.add_task(f"Executing: {step_name}", total=None)
-                if self.verbose:
-                    self.console.info(f"Processing step: {step_name}")
-                try:
-                    step = StepFactory.create(step_name, self.config)
-                    if dry_run:
-                        progress.update(
-                            task,
-                            completed=True,
-                            description=f"Dry run: {step_name}",
-                        )
-                        self.console.info(
-                            f"Dry run: {step_name} (simulated execution)"
-                        )
-                    elif step.execute():
-                        progress.update(
-                            task,
-                            completed=True,
-                            description=f"Completed: {step_name}",
-                        )
-                        self.console.success(f"Completed: {step_name}")
-                    else:
-                        progress.update(
-                            task,
-                            completed=True,
-                            description=f"Failed: {step_name}",
-                        )
-                        self.console.error(f"Failed: {step_name}")
-                        self.rollback_steps(steps[: steps.index(step_name)])
-                        success = False
-                        break
-                except Exception as e:
-                    progress.update(
-                        task,
-                        completed=True,
-                        description=f"Error: {step_name}",
+        for step_name in steps:
+            if self.verbose:
+                self.console.info(f"Processing step: {step_name}")
+            try:
+                step = StepFactory.create(step_name, self.config)
+                if dry_run:
+                    self.console.info(
+                        f"Dry run: {step_name} (simulated execution)"
                     )
-                    if self.verbose:
-                        self.console.error(
-                            f"Detailed error: {type(e).__name__}: {str(e)}"
-                        )
+                elif step.execute():
+                    self.console.success(f"Completed: {step_name}")
+                else:
+                    self.console.error(f"Failed: {step_name}")
                     self.rollback_steps(steps[: steps.index(step_name)])
                     success = False
                     break
+            except Exception as e:
+                if self.verbose:
+                    self.console.error(
+                        f"Detailed error: {type(e).__name__}: {str(e)}"
+                    )
+                self.rollback_steps(steps[: steps.index(step_name)])
+                success = False
+                break
         return success
 
     def rollback_steps(self, executed_steps: List[str]) -> None:
