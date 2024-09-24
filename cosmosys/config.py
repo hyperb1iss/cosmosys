@@ -85,7 +85,11 @@ class ReleaseConfig(DataClassDictMixin):
         if not self.steps:
             raise ConfigurationError("At least one release step is required")
 
-
+@dataclass
+class VersionUpdateConfig(DataClassDictMixin):
+    files: List[str] = field(default_factory=list)
+    update_git_tags: bool = False
+    
 @dataclass
 class CosmosysConfig(DataClassDictMixin):
     """Main configuration class for Cosmosys."""
@@ -95,6 +99,7 @@ class CosmosysConfig(DataClassDictMixin):
     custom_themes: Dict[str, ThemeConfig] = field(default_factory=dict)
     release: ReleaseConfig = field(default_factory=ReleaseConfig)
     features: Dict[str, bool] = field(default_factory=dict)
+    version_update: VersionUpdateConfig = field(default_factory=VersionUpdateConfig)
     git: Dict[str, Any] = field(default_factory=dict)
     is_auto_detected: bool = False
     new_version: Optional[str] = None

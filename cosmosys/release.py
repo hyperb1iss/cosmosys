@@ -3,8 +3,7 @@
 
 from typing import List
 
-from cosmosys.config import CosmosysConfig
-from cosmosys.console import CosmosysConsole
+from cosmosys.context import CosmosysContext
 from cosmosys.steps.base import StepFactory
 
 
@@ -12,18 +11,18 @@ class ReleaseManager:
     """Manages the execution of release steps."""
 
     def __init__(
-        self, config: CosmosysConfig, console: CosmosysConsole, verbose: bool
+        self, context: CosmosysContext, verbose: bool
     ) -> None:
         """
         Initialize the ReleaseManager.
 
         Args:
-            config (CosmosysConfig): The configuration object.
-            console (CosmosysConsole): The Cosmosys console for output.
+            context (CosmosysContext): The Cosmosys context object.
             verbose (bool): Whether to enable verbose output.
         """
-        self.config = config
-        self.console = console
+        self.context = context
+        self.config = context.config
+        self.console = context.console
         self.verbose = verbose
 
     def execute_steps(self, steps: List[str], dry_run: bool) -> bool:
@@ -41,7 +40,7 @@ class ReleaseManager:
             if self.verbose:
                 self.console.info(f"Processing step: {step_name}")
             try:
-                step = StepFactory.create(step_name, self.config)
+                step = StepFactory.create(step_name, self.context)
                 if dry_run:
                     self.console.info(
                         f"Dry run: {step_name} (simulated execution)"
@@ -54,12 +53,12 @@ class ReleaseManager:
                     success = False
                     break
             except Exception as e:
-                if self.verbose:
-                    self.console.error(
-                        f"Detailed error: {type(e).__name__}: {str(e)}"
-                    )
+                self.console.error(
+                    f"Detailed error: {type(e).__name__}: {str(e)}"
+                )
                 self.rollback_steps(steps[: steps.index(step_name)])
                 success = False
+                raise e
                 break
         return success
 
@@ -72,7 +71,7 @@ class ReleaseManager:
         self.console.warning("Rolling back changes...")
         for step_name in reversed(executed_steps):
             try:
-                step = StepFactory.create(step_name, self.config)
+                step = StepFactory.create(step_name, self.context)
                 step.rollback()
                 if self.verbose:
                     self.console.info(f"Rolled back: {step_name}")

@@ -43,7 +43,7 @@ class VersionPart(str, Enum):
     PATCH = "patch"
 
 
-DEFAULT_PART = typer.Option(None, "--part", help="Part of the version to bump")
+DEFAULT_PART = typer.Option(None, "--bump", help="Part of the version to bump")
 
 
 @app.command()
@@ -55,7 +55,7 @@ def release(
     new_version: Optional[str] = typer.Option(
         None, "--new-version", help="Set the new version number explicitly"
     ),
-    part: Optional[VersionPart] = DEFAULT_PART,
+    version_part: Optional[VersionPart] = DEFAULT_PART,
 ) -> None:
     """Run the release process."""
     sf_ctx: CosmosysContext = ctx.obj
@@ -72,8 +72,8 @@ def release(
     # Set versioning parameters
     if new_version:
         config.new_version = new_version
-    if part:
-        config.version_part = part.value
+    if version_part:
+        config.version_part = version_part.value
 
     if config.is_auto_detected:
         console.info("Using auto-detected configuration.")
@@ -85,7 +85,7 @@ def release(
     if verbose:
         console.info(f"Steps to execute: {', '.join(steps)}")
 
-    release_manager = ReleaseManager(config, console, verbose)
+    release_manager = ReleaseManager(sf_ctx, verbose)
 
     if interactive:
         steps = prompt_for_steps(steps, console)
