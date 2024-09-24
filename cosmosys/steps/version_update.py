@@ -4,7 +4,7 @@ from typing import Optional
 
 import typer
 
-from cosmosys.config import CosmosysConfig
+from cosmosys.context import CosmosysContext
 from cosmosys.steps.base import Step, StepFactory
 
 
@@ -12,14 +12,14 @@ from cosmosys.steps.base import Step, StepFactory
 class VersionUpdateStep(Step):
     """Step for updating the version number during the release process."""
 
-    def __init__(self, config: CosmosysConfig) -> None:
+    def __init__(self, context: CosmosysContext) -> None:
         """
         Initialize the VersionUpdateStep.
 
         Args:
-            config (CosmosysConfig): The Cosmosys configuration.
+            context (CosmosysContext): The Cosmosys context object.
         """
-        super().__init__(config)
+        super().__init__(context)
         self.old_version: Optional[str] = None
         self.new_version: Optional[str] = None
 
@@ -34,12 +34,12 @@ class VersionUpdateStep(Step):
         self.new_version = self._get_new_version()
 
         if not self.new_version:
-            self.log("Failed to determine new version")
+            self.console.error("Failed to determine new version")
             return False
 
         self._update_version_in_files()
         self.config.project.version = self.new_version
-        self.log(f"Updated version from {self.old_version} to {self.new_version}")
+        self.console.success(f"Updated version from {self.old_version} to {self.new_version}")
         return True
 
     def rollback(self) -> None:
@@ -47,7 +47,7 @@ class VersionUpdateStep(Step):
         if self.old_version:
             self.config.project.version = self.old_version
             self._update_version_in_files()
-            self.log(f"Rolled back version to {self.old_version}")
+            self.console.info(f"Rolled back version to {self.old_version}")
 
     def _get_new_version(self) -> Optional[str]:
         """
@@ -63,10 +63,8 @@ class VersionUpdateStep(Step):
             return self._bump_version_part(self.config.version_part)
 
         # No version specified; prompt the user
-        self.log("No version specified; prompting the user.")
-        new_version = typer.prompt(
-            "Enter the new version", default=self.old_version
-        )
+        self.console.info("No version specified; prompting the user.")
+        new_version = typer.prompt("Enter the new version", default=self.old_version)
         return new_version
 
     def _bump_version_part(self, part: str) -> Optional[str]:
@@ -81,13 +79,13 @@ class VersionUpdateStep(Step):
         """
         parts = self.old_version.split(".")
         if len(parts) != 3:
-            self.log(f"Invalid version format: {self.old_version}")
+            self.console.error(f"Invalid version format: {self.old_version}")
             return None
 
         try:
             major, minor, patch = map(int, parts)
         except ValueError:
-            self.log(f"Non-integer version parts in: {self.old_version}")
+            self.console.error(f"Non-integer version parts in: {self.old_version}")
             return None
 
         if part == "major":
@@ -100,7 +98,7 @@ class VersionUpdateStep(Step):
         elif part == "patch":
             patch += 1
         else:
-            self.log(f"Invalid part specified: {part}")
+            self.console.error(f"Invalid part specified: {part}")
             return None
 
         return f"{major}.{minor}.{patch}"

@@ -14,6 +14,7 @@ from rich.text import Text
 
 from cosmosys.ascii_art import ASCIIArtManager
 from cosmosys.config import CosmosysConfig, load_config
+from cosmosys.context import CosmosysContext
 from cosmosys.console import CosmosysConsole
 from cosmosys.plugin_manager import PluginManager
 from cosmosys.release import ReleaseManager
@@ -21,19 +22,7 @@ from cosmosys.theme import ThemeManager, preview_theme
 
 app = typer.Typer()
 console = Console()
-
-
-class CosmosysContext:
-    """Context object for Cosmosys CLI commands."""
-
-    def __init__(self, config_file: str, theme: str) -> None:
-        self.config: CosmosysConfig = load_config(config_file)
-        self.theme_manager: ThemeManager = ThemeManager(self.config)
-        self.theme_manager.set_theme(theme)
-        self.console: CosmosysConsole = CosmosysConsole(console, self.theme_manager)
-        self.ascii_art_manager: ASCIIArtManager = ASCIIArtManager(self.theme_manager)
-        self.plugin_manager: PluginManager = PluginManager(self.config)
-        self.plugin_manager.load_plugins()
+plugin_manager: PluginManager = None
 
 
 @app.callback()
@@ -43,7 +32,9 @@ def callback(
     theme: str = typer.Option("default", help="Theme to use"),
 ) -> None:
     """Cosmosys: A flexible and customizable release management tool."""
-    ctx.obj = CosmosysContext(config, theme)
+    ctx.obj = CosmosysContext(console, config, theme)
+    plugin_manager = PluginManager(ctx.obj)
+    plugin_manager.load_plugins()
 
 
 class VersionPart(str, Enum):
@@ -280,7 +271,6 @@ def plugins(
 ) -> None:
     """Manage Cosmosys plugins."""
     sf_ctx: CosmosysContext = ctx.obj
-    plugin_manager = sf_ctx.plugin_manager
     console = sf_ctx.console
 
     if list_plugins:

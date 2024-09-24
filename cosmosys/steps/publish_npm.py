@@ -10,16 +10,23 @@ class PublishNpmStep(Step):
     """Step for publishing Node.js packages to npm during the release process."""
 
     def execute(self) -> bool:
+        """
+        Execute the publish to npm step.
+
+        Returns:
+            bool: True if the publish was successful, False otherwise.
+        """
         try:
             subprocess.run(["npm", "publish"], check=True)
-            self.log("Successfully published package to npm")
+            self.console.success("Successfully published package to npm")
             return True
         except subprocess.CalledProcessError as e:
-            self.log(f"Failed to publish package to npm: {e}")
+            self.console.error(f"Failed to publish package to npm: {e}")
             return False
 
     def rollback(self) -> None:
-        self.log(
+        """Rollback the publish to npm step."""
+        self.console.warning(
             "Warning: Cannot automatically unpublish from npm. "
             "Please manually remove the package if necessary."
         )

@@ -3,20 +3,22 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Dict, Type
 
-from cosmosys.config import CosmosysConfig
+from cosmosys.context import CosmosysContext
 
 
 class Step(ABC):
     """Abstract base class for release steps."""
 
-    def __init__(self, config: CosmosysConfig) -> None:
+    def __init__(self, context: CosmosysContext) -> None:
         """
         Initialize a Step instance.
 
         Args:
-            config (CosmosysConfig): The Cosmosys configuration.
+            context (CosmosysContext): The Cosmosys context object.
         """
-        self.config = config
+        self.context = context
+        self.config = context.config
+        self.console = context.console
 
     @abstractmethod
     def execute(self) -> bool:
@@ -26,12 +28,10 @@ class Step(ABC):
         Returns:
             bool: True if the step was successful, False otherwise.
         """
-        pass
 
     @abstractmethod
     def rollback(self) -> None:
         """Rollback the changes made by this step."""
-        pass
 
     def log(self, message: str) -> None:
         """
@@ -40,8 +40,7 @@ class Step(ABC):
         Args:
             message (str): The message to log.
         """
-        # TODO: Implement proper logging
-        print(f"[{self.__class__.__name__}] {message}")
+        self.console.info(f"[{self.__class__.__name__}] {message}")
 
 
 class StepFactory:
@@ -68,13 +67,13 @@ class StepFactory:
         return decorator
 
     @classmethod
-    def create(cls, step_name: str, config: CosmosysConfig) -> Step:
+    def create(cls, step_name: str, context: CosmosysContext) -> Step:
         """
         Create a step instance by name.
 
         Args:
             step_name (str): The name of the step to create.
-            config (CosmosysConfig): The Cosmosys configuration.
+            context (CosmosysContext): The Cosmosys context object.
 
         Returns:
             Step: An instance of the requested step.
@@ -85,7 +84,7 @@ class StepFactory:
         step_class = cls._steps.get(step_name)
         if not step_class:
             raise ValueError(f"Unknown release step: {step_name}")
-        return step_class(config)
+        return step_class(context)
 
     @classmethod
     def get_available_steps(cls) -> Dict[str, Type[Step]]:

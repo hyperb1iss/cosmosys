@@ -4,21 +4,22 @@ import importlib
 import os
 from typing import Dict, Optional, Type
 
-from cosmosys.config import CosmosysConfig
+from cosmosys.context import CosmosysContext
 from cosmosys.steps.base import Step, StepFactory
 
 
 class PluginManager:
     """Manages the loading and retrieval of plugins for Cosmosys."""
 
-    def __init__(self, config: CosmosysConfig) -> None:
+    def __init__(self, context: CosmosysContext) -> None:
         """
         Initialize a PluginManager instance.
 
         Args:
-            config (CosmosysConfig): The configuration object for Cosmosys.
+            context (CosmosysContext): The context object for Cosmosys.
         """
-        self.config = config
+        self.context = context
+        self.config = context.config
         self.plugins: Dict[str, Type[Step]] = {}
 
     def load_plugins(self) -> None:
@@ -77,6 +78,5 @@ class PluginManager:
             Dict[str, str]: A dictionary of plugin names and descriptions.
         """
         return {
-            name: (cls.__doc__ or "No description available")
-            for name, cls in self.plugins.items()
+            name: (cls.__doc__ or "No description available") for name, cls in self.plugins.items()
         }
