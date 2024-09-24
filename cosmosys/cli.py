@@ -19,6 +19,7 @@ from cosmosys.console import CosmosysConsole
 from cosmosys.plugin_manager import PluginManager
 from cosmosys.release import ReleaseManager
 from cosmosys.theme import ThemeManager, preview_theme
+from cosmosys.version_manager import VersionManager
 
 app = typer.Typer()
 console = Console()
@@ -66,14 +67,21 @@ def release(
     display_header(ascii_art_manager, console)
     console.gradient("Starting release process...", "primary", "secondary")
 
+    # Initialize VersionManager
+    version_manager = VersionManager(config)
+
     # Print out the current version
-    console.info(f"Current version: {config.project.version}")
+    console.info(f"Current version: {version_manager.current_version}")
 
     # Set versioning parameters
     if new_version:
         config.new_version = new_version
     if version_part:
         config.version_part = version_part.value
+
+    # Determine and display the new version
+    new_version = version_manager.determine_new_version()
+    console.info(f"New version will be: {new_version}")
 
     if config.is_auto_detected:
         console.info("Using auto-detected configuration.")
@@ -89,6 +97,11 @@ def release(
 
     if interactive:
         steps = prompt_for_steps(steps, console)
+
+    # Confirm with the user before proceeding
+    if not typer.confirm("Do you want to proceed with the release?"):
+        console.info("Release process cancelled.")
+        return
 
     success = release_manager.execute_steps(steps, dry_run)
 
